@@ -33,13 +33,32 @@ export const metadata: Metadata = {
   },
 };
 
+// Script to set theme before hydration (prevents flash and hydration mismatch)
+const themeScript = `
+  (function() {
+    try {
+      var theme = localStorage.getItem('vibecar-theme');
+      if (theme === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      } else if (!theme && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      }
+    } catch (e) {}
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="it" className="dark">
+    <html lang="it" className="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className={`${outfit.variable} ${dmSans.variable} antialiased`}>
         {children}
       </body>

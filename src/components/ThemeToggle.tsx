@@ -8,16 +8,12 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
-    // Check localStorage or system preference
+    // Just read the current theme state - don't modify DOM (already done by layout script)
     const stored = localStorage.getItem('vibecar-theme') as 'dark' | 'light' | null;
     if (stored) {
       setTheme(stored);
-      document.documentElement.classList.remove('dark', 'light');
-      document.documentElement.classList.add(stored);
     } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
       setTheme('light');
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light');
     }
   }, []);
 
