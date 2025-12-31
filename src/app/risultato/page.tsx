@@ -43,14 +43,14 @@ export default function RisultatoPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         {/* Background orbs */}
-        <div className="gradient-orb gradient-orb-copper w-[500px] h-[500px] top-[20%] right-[10%] fixed opacity-20" />
+        <div className="gradient-orb gradient-orb-purple w-[500px] h-[500px] top-[20%] right-[10%] fixed opacity-20" />
 
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--copper-400)] to-[var(--copper-500)] animate-pulse-glow" />
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 animate-pulse-glow" />
             <div className="absolute inset-0 rounded-2xl bg-[var(--obsidian-800)] m-[2px] flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-[var(--copper-400)] animate-spin"
+                className="w-8 h-8 text-blue-400 animate-spin"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -77,7 +77,7 @@ export default function RisultatoPage() {
   return (
     <main className="min-h-screen relative overflow-hidden">
       {/* Background orbs */}
-      <div className="gradient-orb gradient-orb-copper w-[600px] h-[600px] -top-[200px] -right-[200px] fixed opacity-25" />
+      <div className="gradient-orb gradient-orb-purple w-[600px] h-[600px] -top-[200px] -right-[200px] fixed opacity-25" />
       <div className="gradient-orb gradient-orb-purple w-[400px] h-[400px] bottom-[10%] -left-[100px] fixed opacity-15" />
 
       {/* Header */}
@@ -106,7 +106,7 @@ export default function RisultatoPage() {
 
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--copper-400)] to-[var(--copper-500)] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"

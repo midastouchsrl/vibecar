@@ -52,9 +52,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
       {/* Car info header */}
       <div className="glass-card p-5 opacity-0 animate-fade-in-up">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[var(--obsidian-600)] flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
             <svg
-              className="w-6 h-6 text-[var(--copper-400)]"
+              className="w-6 h-6 text-blue-400"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}
@@ -68,7 +68,7 @@ export default function ValuationResultDisplay({ result, input }: Props) {
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold truncate">
+            <h2 className="text-xl font-bold truncate text-[var(--text-primary)]">
               {input.brand} {input.model}
             </h2>
             <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-[var(--text-secondary)]">
@@ -83,30 +83,50 @@ export default function ValuationResultDisplay({ result, input }: Props) {
         </div>
       </div>
 
-      {/* Main value card */}
-      <div className="relative overflow-hidden rounded-2xl opacity-0 animate-fade-in-up animate-delay-100">
+      {/* Main value card - Modern gradient design */}
+      <div className="relative overflow-hidden rounded-2xl opacity-0 animate-fade-in-up animate-delay-100 border border-[var(--glass-border)]">
         {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--copper-500)] via-[var(--copper-400)] to-[#d4a165]" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E')] opacity-[0.08]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E')] opacity-[0.06]" />
 
         <div className="relative p-6 md:p-8">
-          <div className="text-center">
-            <p className="text-[var(--obsidian-900)]/70 text-sm font-medium uppercase tracking-wider mb-3">
+          {/* Top label */}
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
+            <p className="text-white/80 text-sm font-medium uppercase tracking-widest">
               Valore stimato
             </p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <span className="text-3xl md:text-4xl font-bold text-[var(--obsidian-900)]">
-                {formatPrice(result.range_min)}
-              </span>
-              <span className="text-2xl text-[var(--obsidian-900)]/50">—</span>
-              <span className="text-3xl md:text-4xl font-bold text-[var(--obsidian-900)]">
-                {formatPrice(result.range_max)}
-              </span>
+          </div>
+
+          {/* Price range */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-3 md:gap-6">
+              <div className="text-center">
+                <span className="block text-white/60 text-xs uppercase tracking-wide mb-1">Min</span>
+                <span className="text-2xl md:text-4xl font-bold text-white">
+                  {formatPrice(result.range_min)}
+                </span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-white/40 text-2xl">—</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-white/60 text-xs uppercase tracking-wide mb-1">Max</span>
+                <span className="text-2xl md:text-4xl font-bold text-white">
+                  {formatPrice(result.range_max)}
+                </span>
+              </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-[var(--obsidian-900)]/10">
-              <p className="text-sm text-[var(--obsidian-900)]/70">
-                Mediana di mercato: <span className="font-semibold text-[var(--obsidian-900)]">{formatPrice(result.market_median)}</span>
-              </p>
+
+            {/* Median */}
+            <div className="mt-6 pt-4 border-t border-white/20">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
+                <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                </svg>
+                <span className="text-sm text-white/70">Mediana:</span>
+                <span className="font-bold text-white">{formatPrice(result.market_median)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -147,9 +167,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
         {/* Sample size */}
         <div className="glass-card p-5">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[var(--copper-glow)] flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
               <svg
-                className="w-5 h-5 text-[var(--copper-400)]"
+                className="w-5 h-5 text-emerald-400"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={1.5}
@@ -164,7 +184,7 @@ export default function ValuationResultDisplay({ result, input }: Props) {
             </div>
             <div className="flex-1">
               <p className="text-sm text-[var(--text-muted)]">Annunci analizzati</p>
-              <p className="text-xl font-bold text-[var(--copper-400)] mt-1">
+              <p className="text-xl font-bold text-emerald-400 mt-1">
                 {result.samples}
               </p>
               <div className="mt-2">

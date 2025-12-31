@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <main className="min-h-screen relative overflow-hidden">
       {/* Background gradient orbs */}
-      <div className="gradient-orb gradient-orb-copper w-[600px] h-[600px] -top-[200px] -right-[200px] fixed opacity-30" />
+      <div className="gradient-orb gradient-orb-purple w-[600px] h-[600px] -top-[200px] -right-[200px] fixed opacity-30" />
       <div className="gradient-orb gradient-orb-purple w-[400px] h-[400px] top-[60%] -left-[100px] fixed opacity-20" />
 
       {/* Hero Section */}
@@ -20,7 +20,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-16 md:mb-24 opacity-0 animate-fade-in-up">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--copper-400)] to-[var(--copper-500)] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                   <svg
                     className="w-5 h-5 text-white"
                     fill="none"
@@ -35,7 +35,7 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="absolute -inset-1 bg-gradient-to-br from-[var(--copper-400)] to-[var(--copper-500)] rounded-xl blur opacity-30" />
+                <div className="absolute -inset-1 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl blur opacity-30" />
               </div>
               <span className="text-xl font-semibold tracking-tight">VibeCar</span>
             </div>
@@ -63,7 +63,7 @@ export default function Home() {
                 <span>Dati aggiornati</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[var(--copper-500)]" />
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span>100% gratuito</span>
               </div>
               <div className="flex items-center gap-2">
@@ -81,9 +81,9 @@ export default function Home() {
           <div className="glass-card p-6 md:p-8 lg:p-10 opacity-0 animate-fade-in-up animate-delay-400">
             {/* Form header */}
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 rounded-lg bg-[var(--obsidian-600)] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
                 <svg
-                  className="w-4 h-4 text-[var(--copper-400)]"
+                  className="w-4 h-4 text-blue-400"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={2}
@@ -113,9 +113,9 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8 md:gap-12">
             {/* Feature 1 */}
             <div className="group opacity-0 animate-fade-in-up animate-delay-100">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--obsidian-600)] to-[var(--obsidian-700)] border border-[var(--obsidian-500)] flex items-center justify-center mb-4 group-hover:border-[var(--copper-500)] transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--obsidian-600)] to-[var(--obsidian-700)] border border-[var(--obsidian-500)] flex items-center justify-center mb-4 group-hover:border-amber-500 transition-colors">
                 <svg
-                  className="w-6 h-6 text-[var(--copper-400)]"
+                  className="w-6 h-6 text-amber-400"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={1.5}
@@ -188,9 +188,9 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-[var(--copper-400)] to-[var(--copper-500)] flex items-center justify-center">
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                 <svg
-                  className="w-3 h-3 text-[var(--obsidian-900)]"
+                  className="w-3 h-3 text-white"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth={2.5}

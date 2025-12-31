@@ -172,8 +172,8 @@ input:hover {
 select:focus,
 input:focus {
   outline: none;
-  border-color: var(--copper-500);
-  box-shadow: 0 0 0 3px var(--copper-glow);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
   background: var(--obsidian-600);
 }
 
@@ -280,9 +280,9 @@ label {
 }
 
 .btn-secondary:hover {
-  border-color: var(--copper-500);
-  color: var(--copper-400);
-  background: var(--copper-glow);
+  border-color: #3b82f6;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
 }
 
 /* ============================================
