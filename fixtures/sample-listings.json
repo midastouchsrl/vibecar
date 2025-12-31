@@ -1,0 +1,31 @@
+{
+  "description": "Sample listing data per test senza network",
+  "generated": "2024-01-01",
+  "listings": [
+    { "price": 12500, "year": 2020, "km": 45000, "fuel": "benzina", "title": "Fiat Panda 1.2 Easy" },
+    { "price": 11800, "year": 2020, "km": 52000, "fuel": "benzina", "title": "Fiat Panda 1.2 Lounge" },
+    { "price": 13200, "year": 2021, "km": 38000, "fuel": "benzina", "title": "Fiat Panda 1.0 Hybrid" },
+    { "price": 10500, "year": 2019, "km": 65000, "fuel": "benzina", "title": "Fiat Panda 1.2 Pop" },
+    { "price": 14000, "year": 2021, "km": 25000, "fuel": "benzina", "title": "Fiat Panda Cross" },
+    { "price": 11200, "year": 2020, "km": 58000, "fuel": "benzina", "title": "Fiat Panda Easy" },
+    { "price": 12800, "year": 2020, "km": 42000, "fuel": "benzina", "title": "Fiat Panda Lounge" },
+    { "price": 9800, "year": 2019, "km": 78000, "fuel": "benzina", "title": "Fiat Panda Pop" },
+    { "price": 13500, "year": 2021, "km": 30000, "fuel": "benzina", "title": "Fiat Panda City Cross" },
+    { "price": 11900, "year": 2020, "km": 48000, "fuel": "benzina", "title": "Fiat Panda 1.2 Easy" },
+    { "price": 12100, "year": 2020, "km": 50000, "fuel": "benzina", "title": "Fiat Panda 1.2" },
+    { "price": 10800, "year": 2019, "km": 62000, "fuel": "benzina", "title": "Fiat Panda 1.2 Easy" },
+    { "price": 13800, "year": 2021, "km": 28000, "fuel": "benzina", "title": "Fiat Panda Sport" },
+    { "price": 11500, "year": 2020, "km": 55000, "fuel": "benzina", "title": "Fiat Panda 1.2 Lounge" },
+    { "price": 12300, "year": 2020, "km": 44000, "fuel": "benzina", "title": "Fiat Panda Easy" },
+    { "price": 10200, "year": 2019, "km": 70000, "fuel": "benzina", "title": "Fiat Panda Pop" },
+    { "price": 14500, "year": 2021, "km": 20000, "fuel": "benzina", "title": "Fiat Panda Cross 4x4" },
+    { "price": 11700, "year": 2020, "km": 53000, "fuel": "benzina", "title": "Fiat Panda 1.2" },
+    { "price": 12600, "year": 2020, "km": 40000, "fuel": "benzina", "title": "Fiat Panda Lounge" },
+    { "price": 9500, "year": 2019, "km": 82000, "fuel": "benzina", "title": "Fiat Panda Base" },
+    { "price": 13100, "year": 2021, "km": 35000, "fuel": "benzina", "title": "Fiat Panda Hybrid" },
+    { "price": 11400, "year": 2020, "km": 56000, "fuel": "benzina", "title": "Fiat Panda Easy" },
+    { "price": 12400, "year": 2020, "km": 43000, "fuel": "benzina", "title": "Fiat Panda 1.2 Lounge" },
+    { "price": 10600, "year": 2019, "km": 68000, "fuel": "benzina", "title": "Fiat Panda Pop" },
+    { "price": 14200, "year": 2021, "km": 22000, "fuel": "benzina", "title": "Fiat Panda Cross" }
+  ]
+}

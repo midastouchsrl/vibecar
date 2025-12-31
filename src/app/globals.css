@@ -1,26 +1,465 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================
+   VibeCar 2026 - Precision Luxury Design System
+   ============================================ */
+
+/* Dark Theme (default) */
+:root,
+.dark {
+  --obsidian-900: #0a0a0b;
+  --obsidian-800: #111113;
+  --obsidian-700: #1a1a1e;
+  --obsidian-600: #252529;
+  --obsidian-500: #35353b;
+  --obsidian-400: #4a4a52;
+  --obsidian-300: #6b6b75;
+  --obsidian-200: #9898a3;
+  --obsidian-100: #c5c5cc;
+
+  /* Accent - Copper Metallic */
+  --copper-500: #c78d4e;
+  --copper-400: #d4a165;
+  --copper-300: #e2b77e;
+  --copper-glow: rgba(199, 141, 78, 0.15);
+  --copper-glow-strong: rgba(199, 141, 78, 0.3);
+
+  /* Semantic */
+  --success: #4ade80;
+  --success-muted: rgba(74, 222, 128, 0.15);
+  --warning: #fbbf24;
+  --warning-muted: rgba(251, 191, 36, 0.15);
+  --error: #f87171;
+  --error-muted: rgba(248, 113, 113, 0.15);
+
+  /* Typography */
+  --text-primary: #ffffff;
+  --text-secondary: #9898a3;
+  --text-muted: #6b6b75;
+  --text-placeholder: #4a4a52;
+
+  /* Effects */
+  --glass-bg: rgba(26, 26, 30, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
+
+  /* Orb colors for dark theme */
+  --orb-copper: var(--copper-500);
+  --orb-purple: #6366f1;
+  --orb-opacity: 0.3;
+}
+
+/* Light Theme */
+.light {
+  --obsidian-900: #ffffff;
+  --obsidian-800: #f8f9fa;
+  --obsidian-700: #f1f3f5;
+  --obsidian-600: #e9ecef;
+  --obsidian-500: #dee2e6;
+  --obsidian-400: #ced4da;
+  --obsidian-300: #adb5bd;
+  --obsidian-200: #6c757d;
+  --obsidian-100: #495057;
+
+  /* Accent - Deeper Copper for light bg */
+  --copper-500: #b37a3a;
+  --copper-400: #c78d4e;
+  --copper-300: #d4a165;
+  --copper-glow: rgba(179, 122, 58, 0.12);
+  --copper-glow-strong: rgba(179, 122, 58, 0.25);
+
+  /* Semantic - slightly darker for contrast */
+  --success: #22c55e;
+  --success-muted: rgba(34, 197, 94, 0.12);
+  --warning: #f59e0b;
+  --warning-muted: rgba(245, 158, 11, 0.12);
+  --error: #ef4444;
+  --error-muted: rgba(239, 68, 68, 0.12);
+
+  /* Typography */
+  --text-primary: #1a1a1e;
+  --text-secondary: #4a4a52;
+  --text-muted: #6b6b75;
+  --text-placeholder: #9898a3;
+
+  /* Effects */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.5);
+
+  /* Orb colors for light theme - softer pastels */
+  --orb-copper: #f5d0a9;
+  --orb-purple: #c4b5fd;
+  --orb-opacity: 0.5;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--obsidian-900);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-outfit);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================
+   Base Styles
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--obsidian-900);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* ============================================
+   Form Elements - Critical for UX
+   ============================================ */
+
+/* Select and Input base */
+select,
+input[type="text"],
+input[type="number"],
+input[type="email"] {
+  background: var(--obsidian-700);
+  border: 1px solid var(--obsidian-500);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 1rem 1.25rem;
+  width: 100%;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+select:hover,
+input:hover {
+  border-color: var(--obsidian-400);
+  background: var(--obsidian-600);
+}
+
+select:focus,
+input:focus {
+  outline: none;
+  border-color: var(--copper-500);
+  box-shadow: 0 0 0 3px var(--copper-glow);
+  background: var(--obsidian-600);
+}
+
+/* Placeholder styling - CLEARLY DIFFERENT from filled text */
+input::placeholder {
+  color: var(--text-placeholder);
+  opacity: 1;
+}
+
+/* Select default option styling */
+select option {
+  background: var(--obsidian-700);
+  color: var(--text-primary);
+  padding: 0.75rem;
+}
+
+select option:first-child {
+  color: var(--text-placeholder);
+}
+
+select option:disabled {
+  color: var(--text-placeholder);
+}
+
+/* Custom select arrow */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b6b75' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.25rem;
+  padding-right: 3rem;
+}
+
+/* Labels */
+label {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+
+.btn-primary {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none;
+  border-radius: 12px;
+  color: #ffffff;
+  cursor: pointer;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 1.125rem 2rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.2) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.35);
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--obsidian-400);
+  border-radius: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 1rem 1.5rem;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--copper-500);
+  color: var(--copper-400);
+  background: var(--copper-glow);
+}
+
+/* ============================================
+   Glass Card
+   ============================================ */
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+}
+
+/* ============================================
+   Gradient Orbs (Background decoration)
+   ============================================ */
+
+.gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.gradient-orb-copper {
+  background: radial-gradient(circle, var(--orb-copper) 0%, transparent 70%);
+  opacity: var(--orb-opacity);
+}
+
+.gradient-orb-purple {
+  background: radial-gradient(circle, var(--orb-purple) 0%, transparent 70%);
+  opacity: var(--orb-opacity);
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--copper-glow); }
+  50% { box-shadow: 0 0 40px var(--copper-glow-strong); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-delay-100 { animation-delay: 100ms; }
+.animate-delay-200 { animation-delay: 200ms; }
+.animate-delay-300 { animation-delay: 300ms; }
+.animate-delay-400 { animation-delay: 400ms; }
+.animate-delay-500 { animation-delay: 500ms; }
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--obsidian-600) 0%,
+    var(--obsidian-500) 50%,
+    var(--obsidian-600) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   Scrollbar
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--obsidian-800);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--obsidian-500);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--obsidian-400);
+}
+
+/* ============================================
+   Selection
+   ============================================ */
+
+::selection {
+  background: var(--copper-500);
+  color: var(--obsidian-900);
+}
+
+/* ============================================
+   Focus visible (accessibility)
+   ============================================ */
+
+:focus-visible {
+  outline: 2px solid var(--copper-500);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Utility classes
+   ============================================ */
+
+.text-gradient-copper {
+  background: linear-gradient(135deg, var(--copper-300) 0%, var(--copper-500) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.border-gradient {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--obsidian-800), var(--obsidian-800)) padding-box,
+    linear-gradient(135deg, var(--copper-500), var(--obsidian-600)) border-box;
 }
