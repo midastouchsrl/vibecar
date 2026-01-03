@@ -1,29 +1,30 @@
 /**
  * Data source per recuperare annunci auto
  *
- * Strategia MVP: utilizziamo AutoScout24 Italia che ha un endpoint
- * di ricerca pubblico. Facciamo scraping leggero con caching aggressivo
- * per minimizzare le richieste.
- *
- * NOTA: In produzione, considera l'uso di API ufficiali o partnership.
- * Questo approccio è solo per MVP/test.
+ * Utilizziamo AutoScout24 Italia con gli ID precisi per marca/modello
+ * per ricerche accurate (inclusi allestimenti AMG, RS, ecc.)
  */
 
 import { CarListing, CarValuationInput, FuelType, GearboxType } from './types';
 import { valuationCache, generateCacheKey } from './cache';
+import { FUEL_MAP, GEARBOX_MAP } from './autoscout-data';
 
-// Mapping marche per URL AutoScout24
+// Mapping marche per URL fallback (quando non abbiamo makeId)
 const BRAND_SLUGS: Record<string, string> = {
   'abarth': 'abarth',
   'alfa romeo': 'alfa-romeo',
   'audi': 'audi',
   'bmw': 'bmw',
+  'byd': 'byd',
   'chevrolet': 'chevrolet',
   'citroen': 'citroen',
+  'cupra': 'cupra',
   'dacia': 'dacia',
   'ds': 'ds-automobiles',
+  'ds automobiles': 'ds-automobiles',
   'fiat': 'fiat',
   'ford': 'ford',
+  'genesis': 'genesis',
   'honda': 'honda',
   'hyundai': 'hyundai',
   'jaguar': 'jaguar',
@@ -34,16 +35,19 @@ const BRAND_SLUGS: Record<string, string> = {
   'lexus': 'lexus',
   'mazda': 'mazda',
   'mercedes-benz': 'mercedes-benz',
+  'mg': 'mg',
   'mini': 'mini',
   'mitsubishi': 'mitsubishi',
   'nissan': 'nissan',
   'opel': 'opel',
   'peugeot': 'peugeot',
+  'polestar': 'polestar',
   'porsche': 'porsche',
   'renault': 'renault',
   'seat': 'seat',
   'skoda': 'skoda',
   'smart': 'smart',
+  'ssangyong': 'ssangyong',
   'subaru': 'subaru',
   'suzuki': 'suzuki',
   'tesla': 'tesla',
@@ -58,7 +62,7 @@ const FUEL_SLUGS: Record<FuelType, string> = {
   'diesel': 'D',
   'gpl': 'L',
   'metano': 'M',
-  'ibrida': 'B,2', // Benzina + Ibrido
+  'ibrida': '2', // Ibrido benzina
   'elettrica': 'E',
 };
 
@@ -70,6 +74,7 @@ const GEARBOX_SLUGS: Record<GearboxType, string> = {
 
 /**
  * Costruisce l'URL di ricerca AutoScout24
+ * Usa gli ID quando disponibili per ricerche precise
  */
 function buildSearchUrl(
   input: CarValuationInput,
@@ -79,9 +84,6 @@ function buildSearchUrl(
   kmMax: number,
   page: number = 1
 ): string {
-  const brand = BRAND_SLUGS[input.brand.toLowerCase()] || input.brand.toLowerCase();
-  const model = input.model.toLowerCase().replace(/\s+/g, '-');
-
   const params = new URLSearchParams({
     'cy': 'I', // Italia
     'fregfrom': String(yearMin),
@@ -96,67 +98,68 @@ function buildSearchUrl(
     'ustate': 'N,U', // Nuove e usate
     'size': '20', // Max risultati per pagina
     'page': String(page),
+    'damaged_listing': 'exclude',
   });
+
+  // Se abbiamo makeId e modelId, usa il formato mmm (più preciso)
+  if (input.makeId && input.modelId) {
+    params.set('mmm', `${input.makeId}|${input.modelId}|`);
+    return `https://www.autoscout24.it/lst?${params.toString()}`;
+  }
+
+  // Fallback: usa slug marca/modello
+  const brand = BRAND_SLUGS[input.brand.toLowerCase()] || input.brand.toLowerCase().replace(/\s+/g, '-');
+  const model = input.model.toLowerCase().replace(/\s+/g, '-');
 
   return `https://www.autoscout24.it/lst/${brand}/${model}?${params.toString()}`;
 }
 
 /**
  * Estrae i prezzi dalla pagina HTML di AutoScout24
- * Usa regex semplici per evitare dipendenze pesanti
  */
 function extractListingsFromHtml(html: string): CarListing[] {
   const listings: CarListing[] = [];
-
-  // Pattern per trovare i prezzi nei data attributes o nel markup
-  // AutoScout24 usa vari formati, cerchiamo i più comuni
+  const seenPrices = new Set<number>();
 
   // Pattern 1: data-price="12345"
   const pricePattern1 = /data-price="(\d+)"/g;
   let match;
   while ((match = pricePattern1.exec(html)) !== null) {
     const price = parseInt(match[1], 10);
-    if (price > 500 && price < 500000) {
+    if (price > 500 && price < 500000 && !seenPrices.has(price)) {
+      seenPrices.add(price);
       listings.push({ price, year: 0, km: 0 });
     }
   }
 
-  // Se troviamo pochi risultati, proviamo altri pattern
-
-  // Pattern 2: Prezzi nel formato €XX.XXX o € XX.XXX
-  if (listings.length < 5) {
-    const pricePattern2 = /[€]\s*([\d.]+)/g;
-    while ((match = pricePattern2.exec(html)) !== null) {
-      const priceStr = match[1].replace(/\./g, '');
-      const price = parseInt(priceStr, 10);
-      if (price > 500 && price < 500000) {
-        // Evita duplicati
-        if (!listings.some((l) => l.price === price)) {
-          listings.push({ price, year: 0, km: 0 });
-        }
-      }
+  // Pattern 2: Prezzi nel formato €XX.XXX
+  const pricePattern2 = /[€]\s*([\d.]+)/g;
+  while ((match = pricePattern2.exec(html)) !== null) {
+    const priceStr = match[1].replace(/\./g, '');
+    const price = parseInt(priceStr, 10);
+    if (price > 500 && price < 500000 && !seenPrices.has(price)) {
+      seenPrices.add(price);
+      listings.push({ price, year: 0, km: 0 });
     }
   }
 
-  // Pattern 3: Cerca nel JSON embedded (spesso c'è __NEXT_DATA__ o simili)
+  // Pattern 3: "price": 12345 nel JSON
   const jsonPattern = /"price":\s*(\d+)/g;
   while ((match = jsonPattern.exec(html)) !== null) {
     const price = parseInt(match[1], 10);
-    if (price > 500 && price < 500000) {
-      if (!listings.some((l) => l.price === price)) {
-        listings.push({ price, year: 0, km: 0 });
-      }
+    if (price > 500 && price < 500000 && !seenPrices.has(price)) {
+      seenPrices.add(price);
+      listings.push({ price, year: 0, km: 0 });
     }
   }
 
-  // Pattern 4: rawPrice nei JSON
+  // Pattern 4: "rawPrice": 12345
   const rawPricePattern = /"rawPrice":\s*(\d+)/g;
   while ((match = rawPricePattern.exec(html)) !== null) {
     const price = parseInt(match[1], 10);
-    if (price > 500 && price < 500000) {
-      if (!listings.some((l) => l.price === price)) {
-        listings.push({ price, year: 0, km: 0 });
-      }
+    if (price > 500 && price < 500000 && !seenPrices.has(price)) {
+      seenPrices.add(price);
+      listings.push({ price, year: 0, km: 0 });
     }
   }
 
@@ -174,10 +177,12 @@ export async function fetchListings(
   kmMax: number,
   page: number = 1
 ): Promise<CarListing[]> {
-  // Genera chiave cache
+  // Genera chiave cache (include makeId/modelId se presenti)
   const cacheKey = generateCacheKey({
     brand: input.brand.toLowerCase(),
     model: input.model.toLowerCase(),
+    makeId: input.makeId,
+    modelId: input.modelId,
     yearMin,
     yearMax,
     kmMin,
@@ -200,7 +205,6 @@ export async function fetchListings(
   console.log('[Fetch] URL:', url);
 
   try {
-    // Fetch con user-agent realistico e timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -228,15 +232,12 @@ export async function fetchListings(
 
     console.log(`[Fetch] Pagina ${page}: trovati ${listings.length} annunci`);
 
-    // Salva in cache (anche se vuoto, per evitare richieste ripetute)
+    // Salva in cache
     valuationCache.set(cacheKey, JSON.stringify(listings));
 
     return listings;
   } catch (error) {
     console.error('[Fetch] Errore:', error);
-
-    // In caso di errore, ritorna array vuoto
-    // (la logica principale gestirà il fallback)
     return [];
   }
 }
@@ -253,6 +254,7 @@ export async function fetchListingsMultiPage(
   maxPages: number = 5
 ): Promise<CarListing[]> {
   const allListings: CarListing[] = [];
+  const seenPrices = new Set<number>();
 
   for (let page = 1; page <= maxPages; page++) {
     const pageListings = await fetchListings(
@@ -266,18 +268,19 @@ export async function fetchListingsMultiPage(
 
     // Aggiungi i risultati evitando duplicati
     for (const listing of pageListings) {
-      if (!allListings.some(l => l.price === listing.price)) {
+      if (!seenPrices.has(listing.price)) {
+        seenPrices.add(listing.price);
         allListings.push(listing);
       }
     }
 
-    // Se questa pagina ha meno di 10 risultati, probabilmente non ci sono altre pagine
+    // Se questa pagina ha meno di 10 risultati, stop
     if (pageListings.length < 10) {
       console.log(`[Fetch] Pagina ${page} con pochi risultati, stop paginazione`);
       break;
     }
 
-    // Piccola pausa tra le richieste per evitare rate limiting
+    // Pausa tra le richieste
     if (page < maxPages) {
       await new Promise(resolve => setTimeout(resolve, 300));
     }

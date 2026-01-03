@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
     const input: Partial<CarValuationInput> = {
       brand: body.brand,
       model: body.model,
+      makeId: body.makeId ? parseInt(body.makeId, 10) : undefined,
+      modelId: body.modelId ? parseInt(body.modelId, 10) : undefined,
       year: parseInt(body.year, 10),
       km: parseInt(body.km, 10),
       fuel: body.fuel,

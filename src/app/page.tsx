@@ -43,7 +43,7 @@ export default function Home() {
           </div>
 
           {/* Headline */}
-          <div className="max-w-3xl">
+          <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 opacity-0 animate-fade-in-up animate-delay-100">
               Scopri il{' '}
               <span className="text-gradient-blue">vero valore</span>
@@ -51,13 +51,13 @@ export default function Home() {
               della tua auto
             </h1>
 
-            <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mb-4 opacity-0 animate-fade-in-up animate-delay-200">
+            <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mx-auto mb-4 opacity-0 animate-fade-in-up animate-delay-200">
               Analisi intelligente basata su migliaia di annunci reali.
               Risultato in pochi secondi.
             </p>
 
             {/* Trust indicators */}
-            <div className="flex flex-wrap items-center gap-6 text-sm text-[var(--text-muted)] opacity-0 animate-fade-in-up animate-delay-300">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-[var(--text-muted)] opacity-0 animate-fade-in-up animate-delay-300">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
                 <span>Dati aggiornati</span>

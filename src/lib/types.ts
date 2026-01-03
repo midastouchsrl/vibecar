@@ -7,6 +7,8 @@
 export interface CarValuationInput {
   brand: string;           // Marca (es. "Fiat", "Volkswagen")
   model: string;           // Modello (es. "Panda", "Golf")
+  makeId?: number;         // ID marca AutoScout24 (opzionale, per ricerche precise)
+  modelId?: number;        // ID modello AutoScout24 (opzionale, per ricerche precise)
   year: number;            // Anno immatricolazione
   km: number;              // Chilometraggio
   fuel: FuelType;          // Alimentazione

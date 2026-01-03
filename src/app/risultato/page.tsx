@@ -24,20 +24,18 @@ export default function RisultatoPage() {
     const storedInput = sessionStorage.getItem('vibecar_input');
 
     if (!storedResult || !storedInput) {
-      router.push('/');
+      router.replace('/');
       return;
     }
 
     try {
       setResult(JSON.parse(storedResult));
       setInput(JSON.parse(storedInput));
+      setLoading(false);
     } catch {
-      router.push('/');
-      return;
+      router.replace('/');
     }
-
-    setLoading(false);
-  }, [router]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (

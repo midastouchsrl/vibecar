@@ -2,18 +2,27 @@
 
 /**
  * VibeCar Valuation Form
- * Premium form with clear input contrast
+ * Form con dropdown dinamici per marca/modello da AutoScout24
  */
 
-import { useState, FormEvent } from 'react';
+import { useState, useMemo, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { CAR_MAKES } from '@/lib/autoscout-data';
 import {
-  MARCHE_AUTO,
   REGIONI_ITALIA,
   FUEL_TYPES,
   GEARBOX_TYPES,
   CONDITION_TYPES,
 } from '@/lib/config';
+
+// Pre-compute years at module level to avoid hydration mismatch
+const BASE_YEAR = 2026;
+const YEARS_LIST = Array.from({ length: 35 }, (_, i) => BASE_YEAR - i);
+
+interface Model {
+  id: number;
+  name: string;
+}
 
 export default function ValuationForm() {
   const router = useRouter();
@@ -21,8 +30,8 @@ export default function ValuationForm() {
   const [error, setError] = useState<string | null>(null);
 
   // Form state
-  const [brand, setBrand] = useState('');
-  const [model, setModel] = useState('');
+  const [makeId, setMakeId] = useState<number | ''>('');
+  const [modelId, setModelId] = useState<number | ''>('');
   const [year, setYear] = useState('');
   const [km, setKm] = useState('');
   const [fuel, setFuel] = useState('');
@@ -30,22 +39,77 @@ export default function ValuationForm() {
   const [region, setRegion] = useState('');
   const [condition, setCondition] = useState('normale');
 
-  // Generate available years (last 35 years)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 35 }, (_, i) => currentYear - i);
+  // Models state
+  const [models, setModels] = useState<Model[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  // Use pre-computed years list
+  const years = useMemo(() => YEARS_LIST, []);
+
+  // Fetch models when make changes
+  useEffect(() => {
+    if (!makeId) {
+      setModels([]);
+      setModelId('');
+      return;
+    }
+
+    const fetchModels = async () => {
+      setLoadingModels(true);
+      setModelId('');
+
+      try {
+        const response = await fetch(`/api/models/${makeId}`);
+        const data = await response.json();
+
+        if (data.models) {
+          setModels(data.models);
+        }
+      } catch (err) {
+        console.error('Error fetching models:', err);
+        setModels([]);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+
+    fetchModels();
+  }, [makeId]);
+
+  // Get selected make and model names for submission
+  const getSelectedMakeName = () => {
+    const make = CAR_MAKES.find((m) => m.id === makeId);
+    return make?.name || '';
+  };
+
+  const getSelectedModelName = () => {
+    const model = models.find((m) => m.id === modelId);
+    return model?.name || '';
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
+    const brandName = getSelectedMakeName();
+    const modelName = getSelectedModelName();
+
+    if (!brandName || !modelName) {
+      setError('Seleziona marca e modello');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/valuate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          brand,
-          model,
+          brand: brandName,
+          model: modelName,
+          makeId,
+          modelId,
           year: parseInt(year, 10),
           km: parseInt(km.replace(/\D/g, ''), 10),
           fuel,
@@ -67,7 +131,18 @@ export default function ValuationForm() {
       sessionStorage.setItem('vibecar_result', JSON.stringify(data));
       sessionStorage.setItem(
         'vibecar_input',
-        JSON.stringify({ brand, model, year, km, fuel, gearbox, region, condition })
+        JSON.stringify({
+          brand: brandName,
+          model: modelName,
+          makeId,
+          modelId,
+          year,
+          km,
+          fuel,
+          gearbox,
+          region,
+          condition
+        })
       );
       router.push('/risultato');
     } catch (err) {
@@ -92,15 +167,15 @@ export default function ValuationForm() {
           <div className="relative">
             <select
               id="brand"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
+              value={makeId}
+              onChange={(e) => setMakeId(e.target.value ? Number(e.target.value) : '')}
               required
-              className={brand ? 'text-[var(--text-primary)]' : 'text-[var(--text-placeholder)]'}
+              className={makeId ? 'text-[var(--text-primary)]' : 'text-[var(--text-placeholder)]'}
             >
               <option value="" disabled>Seleziona marca</option>
-              {MARCHE_AUTO.map((m) => (
-                <option key={m} value={m}>
-                  {m}
+              {CAR_MAKES.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
                 </option>
               ))}
             </select>
@@ -109,14 +184,53 @@ export default function ValuationForm() {
 
         <div className="space-y-2">
           <label htmlFor="model">Modello</label>
-          <input
-            type="text"
-            id="model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            placeholder="es. Panda, Golf, 500..."
-            required
-          />
+          <div className="relative">
+            <select
+              id="model"
+              value={modelId}
+              onChange={(e) => setModelId(e.target.value ? Number(e.target.value) : '')}
+              required
+              disabled={!makeId || loadingModels}
+              className={modelId ? 'text-[var(--text-primary)]' : 'text-[var(--text-placeholder)]'}
+            >
+              <option value="" disabled>
+                {loadingModels
+                  ? 'Caricamento...'
+                  : makeId
+                    ? 'Seleziona modello'
+                    : 'Prima seleziona marca'}
+              </option>
+              {models.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+            {loadingModels && (
+              <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                <svg
+                  className="animate-spin h-4 w-4 text-blue-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -218,7 +332,6 @@ export default function ValuationForm() {
           {CONDITION_TYPES.map((c) => {
             const isSelected = condition === c.value;
 
-            // Colori dinamici per ogni condizione
             const getConditionStyles = () => {
               if (!isSelected) {
                 return {

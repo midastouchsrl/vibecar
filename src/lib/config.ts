@@ -10,8 +10,8 @@ export const DEFAULT_VALUATION_CONFIG: ValuationConfig = {
   // Finestra temporale: ±1 anno
   yearWindow: 1,
 
-  // Finestra km: ±10% del valore inserito
-  kmWindowPercent: 0.10,
+  // Finestra km: ±15% del valore inserito
+  kmWindowPercent: 0.15,
 
   // Outlier removal: escludi sotto P10 e sopra P90
   outlierLowPercentile: 10,
