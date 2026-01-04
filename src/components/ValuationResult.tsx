@@ -13,6 +13,7 @@ import {
   trackShareClicked,
   trackShareCompleted,
   getEstimateTimeMs,
+  generateShareUrl,
 } from '@/lib/analytics';
 
 /**
@@ -49,14 +50,22 @@ interface Props {
 export default function ValuationResultDisplay({ result, input }: Props) {
   // Track estimate completion on mount
   useEffect(() => {
+    const p50 = result.p50 || result.market_median;
+    const dealerPrice = result.dealer_buy_price;
     trackEstimateCompleted({
       brand: input.brand,
       model: input.model,
       year: parseInt(input.year, 10),
       confidence: result.confidence,
       n_used: result.samples,
+      n_total: result.samples_raw || result.samples,
       cached: result.cached,
-      p50: result.p50 || result.market_median,
+      p25: result.p25 || result.range_min,
+      p50,
+      p75: result.p75 || result.range_max,
+      dealer_price: dealerPrice,
+      dealer_gap: p50 - dealerPrice,
+      iqr_ratio: result.iqr_ratio || 0,
       time_to_result_ms: getEstimateTimeMs(),
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -449,9 +458,8 @@ export default function ValuationResultDisplay({ result, input }: Props) {
           <button
             onClick={() => {
               const shareProps = handleShare('link');
-              const url = new URL(window.location.href);
-              url.searchParams.set('ref', 'share');
-              navigator.clipboard.writeText(url.toString());
+              const shareUrl = generateShareUrl();
+              navigator.clipboard.writeText(shareUrl);
               trackShareCompleted(shareProps);
               alert('Link copiato!');
             }}
@@ -483,10 +491,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
           <button
             onClick={() => {
               const shareProps = handleShare('whatsapp');
-              const shareUrl = new URL(window.location.href);
-              shareUrl.searchParams.set('ref', 'share');
+              const shareUrl = generateShareUrl();
               const text = `Ho valutato la mia ${input.brand} ${input.model} (${input.year}) su VibeCar: ${formatPrice(result.p50 || result.market_median)} (range ${formatPrice(result.p25 || result.range_min)} - ${formatPrice(result.p75 || result.range_max)})`;
-              const url = `https://wa.me/?text=${encodeURIComponent(text + ' ' + shareUrl.toString())}`;
+              const url = `https://wa.me/?text=${encodeURIComponent(text + ' ' + shareUrl)}`;
               window.open(url, '_blank');
               trackShareCompleted(shareProps);
             }}

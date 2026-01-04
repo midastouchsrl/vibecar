@@ -3,6 +3,11 @@
  * Unified tracking for Plausible, PostHog, and custom metrics
  *
  * Privacy-first: No PII, no cookies required, fully anonymous
+ *
+ * Features:
+ * - Anonymous ID (persistent localStorage UUID)
+ * - Estimate ID (per-valuation UUID for attribution)
+ * - Viral tracking with share link attribution
  */
 
 import posthog from 'posthog-js';
@@ -14,6 +19,134 @@ import posthog from 'posthog-js';
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY || '';
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://eu.posthog.com';
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN || 'vibecar.it';
+
+// Storage keys
+const ANON_ID_KEY = 'vibecar_anon_id';
+const ESTIMATE_CONTEXT_KEY = 'vibecar_estimate_context';
+
+// ============================================
+// UUID GENERATION (v4)
+// ============================================
+
+/**
+ * Generate UUID v4
+ */
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for older browsers
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+// ============================================
+// ANONYMOUS ID MANAGEMENT
+// ============================================
+
+let cachedAnonId: string | null = null;
+
+/**
+ * Get or create anonymous ID (persistent in localStorage)
+ */
+export function getAnonId(): string {
+  if (typeof window === 'undefined') return 'server';
+
+  if (cachedAnonId) return cachedAnonId;
+
+  try {
+    let anonId = localStorage.getItem(ANON_ID_KEY);
+    if (!anonId) {
+      anonId = generateUUID();
+      localStorage.setItem(ANON_ID_KEY, anonId);
+    }
+    cachedAnonId = anonId;
+    return anonId;
+  } catch {
+    // localStorage not available (private browsing)
+    cachedAnonId = generateUUID();
+    return cachedAnonId;
+  }
+}
+
+// ============================================
+// ESTIMATE ID MANAGEMENT
+// ============================================
+
+/**
+ * Generate a new estimate ID (UUID v4)
+ */
+export function newEstimateId(): string {
+  return generateUUID();
+}
+
+// ============================================
+// ESTIMATE CONTEXT (current session)
+// ============================================
+
+export interface EstimateContext {
+  estimate_id: string;
+  origin_ref?: string;    // 'share' | 'organic' | 'utm'
+  origin_sid?: string;    // Source estimate_id if from share
+  utm_source?: string;
+  utm_medium?: string;
+}
+
+let currentEstimateContext: EstimateContext | null = null;
+
+/**
+ * Set current estimate context
+ */
+export function setEstimateContext(context: EstimateContext): void {
+  currentEstimateContext = context;
+
+  // Also persist to sessionStorage for page reloads
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.setItem(ESTIMATE_CONTEXT_KEY, JSON.stringify(context));
+    } catch {
+      // Ignore
+    }
+  }
+}
+
+/**
+ * Get current estimate context
+ */
+export function getEstimateContext(): EstimateContext | null {
+  if (currentEstimateContext) return currentEstimateContext;
+
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = sessionStorage.getItem(ESTIMATE_CONTEXT_KEY);
+      if (stored) {
+        currentEstimateContext = JSON.parse(stored);
+        return currentEstimateContext;
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Clear estimate context (after share or new estimate)
+ */
+export function clearEstimateContext(): void {
+  currentEstimateContext = null;
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.removeItem(ESTIMATE_CONTEXT_KEY);
+    } catch {
+      // Ignore
+    }
+  }
+}
 
 // ============================================
 // INITIALIZATION
@@ -54,6 +187,9 @@ export function initAnalytics(): void {
     posthog.opt_in_capturing();
   }
 
+  // Check for viral attribution on init
+  parseReferralSource();
+
   initialized = true;
   console.log('[Analytics] Initialized');
 }
@@ -77,8 +213,14 @@ export interface EstimateResultProps {
   year: number;
   confidence: 'alta' | 'media' | 'bassa';
   n_used: number;
+  n_total: number;
   cached: boolean;
+  p25: number;
   p50: number;
+  p75: number;
+  dealer_price: number;
+  dealer_gap: number;      // p50 - dealer_price
+  iqr_ratio: number;
   fallback_step?: string;
   time_to_result_ms?: number;
 }
@@ -114,14 +256,23 @@ function trackPlausible(eventName: string, props?: Record<string, string | numbe
 // ============================================
 
 /**
- * Track event in PostHog
+ * Track event in PostHog with identity
  */
 function trackPostHog(eventName: string, properties?: Record<string, unknown>): void {
   if (!POSTHOG_KEY || typeof window === 'undefined') return;
 
+  const context = getEstimateContext();
+  const anonId = getAnonId();
+
   posthog.capture(eventName, {
     ...properties,
-    // Always add timestamp
+    // Identity
+    anon_id: anonId,
+    estimate_id: context?.estimate_id,
+    // Attribution
+    origin_ref: context?.origin_ref,
+    origin_sid: context?.origin_sid,
+    // Timestamp
     timestamp: new Date().toISOString(),
   });
 }
@@ -134,6 +285,19 @@ function trackPostHog(eventName: string, properties?: Record<string, unknown>): 
  * Track: User starts estimate (fills form)
  */
 export function trackStartEstimate(props: EstimateEventProps): void {
+  // Generate new estimate ID for this session
+  const estimateId = newEstimateId();
+  const context = getEstimateContext();
+
+  // Update context with new estimate ID, preserving attribution
+  setEstimateContext({
+    estimate_id: estimateId,
+    origin_ref: context?.origin_ref || 'organic',
+    origin_sid: context?.origin_sid,
+    utm_source: context?.utm_source,
+    utm_medium: context?.utm_medium,
+  });
+
   // PostHog: detailed tracking
   trackPostHog('start_estimate', {
     brand: props.brand,
@@ -155,15 +319,21 @@ export function trackEstimateCompleted(props: EstimateResultProps): void {
     cached: props.cached,
   });
 
-  // PostHog: detailed analytics
+  // PostHog: detailed analytics with enhanced properties
   trackPostHog('estimate_completed', {
     brand: props.brand,
     model: props.model,
     year: props.year,
     confidence: props.confidence,
     n_used: props.n_used,
+    n_total: props.n_total,
     cached: props.cached,
+    p25_range: getPriceRange(props.p25),
     p50_range: getPriceRange(props.p50),
+    p75_range: getPriceRange(props.p75),
+    dealer_price_range: getPriceRange(props.dealer_price),
+    dealer_gap: props.dealer_gap,
+    iqr_ratio: props.iqr_ratio,
     fallback_step: props.fallback_step || 'none',
     time_to_result_ms: props.time_to_result_ms,
   });
@@ -249,31 +419,76 @@ export function trackEstimateFailed(props: EstimateEventProps, reason: string): 
 }
 
 // ============================================
-// VIRAL METRICS
+// VIRAL ATTRIBUTION
 // ============================================
 
 /**
- * Track: Referral source (for K-factor calculation)
+ * Parse URL for referral/attribution data (called on init)
  */
-export function trackReferralSource(): void {
+function parseReferralSource(): void {
   if (typeof window === 'undefined') return;
 
-  const referrer = document.referrer;
   const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get('ref');
+  const sid = urlParams.get('sid');    // Source estimate_id
   const utmSource = urlParams.get('utm_source');
-  const sharedFrom = urlParams.get('ref'); // ?ref=share parameter
+  const utmMedium = urlParams.get('utm_medium');
 
-  if (sharedFrom === 'share') {
+  // Build initial context
+  let origin_ref: string = 'organic';
+  let origin_sid: string | undefined;
+
+  if (ref === 'share' && sid) {
+    origin_ref = 'share';
+    origin_sid = sid;
+
+    // Track viral visit immediately
     trackPostHog('viral_visit', {
       source: 'share_link',
-      referrer_domain: referrer ? new URL(referrer).hostname : 'direct',
+      source_estimate_id: sid,
+      referrer_domain: document.referrer ? new URL(document.referrer).hostname : 'direct',
     });
   } else if (utmSource) {
+    origin_ref = 'utm';
+
     trackPostHog('utm_visit', {
       utm_source: utmSource,
-      utm_medium: urlParams.get('utm_medium') || 'unknown',
+      utm_medium: utmMedium || 'unknown',
     });
   }
+
+  // Set initial context (will be updated when estimate starts)
+  if (origin_ref !== 'organic') {
+    setEstimateContext({
+      estimate_id: '', // Will be set when estimate starts
+      origin_ref,
+      origin_sid,
+      utm_source: utmSource || undefined,
+      utm_medium: utmMedium || undefined,
+    });
+  }
+}
+
+/**
+ * Track: Referral source (legacy, kept for compatibility)
+ */
+export function trackReferralSource(): void {
+  // Now handled automatically in parseReferralSource() on init
+}
+
+/**
+ * Generate share URL with attribution params
+ */
+export function generateShareUrl(baseUrl?: string): string {
+  const context = getEstimateContext();
+  const url = new URL(baseUrl || window.location.origin);
+
+  url.searchParams.set('ref', 'share');
+  if (context?.estimate_id) {
+    url.searchParams.set('sid', context.estimate_id);
+  }
+
+  return url.toString();
 }
 
 // ============================================
