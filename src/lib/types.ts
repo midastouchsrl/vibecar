@@ -47,6 +47,10 @@ export interface ValuationResult {
   p50: number;
   p75: number;
 
+  // Estremi puliti (dopo rimozione outlier)
+  min_clean?: number;
+  max_clean?: number;
+
   // Statistiche campione
   samples: number;         // Numero annunci analizzati (dopo dedup)
   samples_raw: number;     // Numero annunci grezzi (prima dedup)

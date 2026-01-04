@@ -5,7 +5,8 @@
  * Premium result visualization with analytics tracking
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { ValuationResult } from '@/lib/types';
 import { formatPrice, formatNumber } from '@/lib/robust-stats';
 import {
@@ -16,6 +17,8 @@ import {
   generateShareUrl,
 } from '@/lib/analytics';
 import LeadForm from './LeadForm';
+import PriceDistribution from './PriceDistribution';
+import ShareModal from './ShareModal';
 
 /**
  * Format date in Italian format
@@ -49,6 +52,8 @@ interface Props {
 }
 
 export default function ValuationResultDisplay({ result, input }: Props) {
+  const [showShareModal, setShowShareModal] = useState(false);
+
   // Track estimate completion on mount
   useEffect(() => {
     const p50 = result.p50 || result.market_median;
@@ -72,9 +77,10 @@ export default function ValuationResultDisplay({ result, input }: Props) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Share tracking helper
-  const handleShare = (type: 'link' | 'image' | 'whatsapp') => {
+  const handleShare = (type: 'link' | 'image' | 'whatsapp' | 'pdf') => {
+    const trackingType = type === 'pdf' ? 'image' : type; // pdf tracked as image
     const shareProps = {
-      type,
+      type: trackingType as 'link' | 'image' | 'whatsapp',
       brand: input.brand,
       model: input.model,
       year: parseInt(input.year, 10),
@@ -192,39 +198,14 @@ export default function ValuationResultDisplay({ result, input }: Props) {
         </div>
       </div>
 
-      {/* Percentile visualization */}
-      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-150">
-        <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-4">
-          Distribuzione prezzi
-        </h3>
-        <div className="relative h-12 bg-[var(--obsidian-700)] rounded-lg overflow-hidden">
-          {/* Gradient bar */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-emerald-500 to-amber-500 opacity-30" />
-
-          {/* P25 marker */}
-          <div className="absolute left-[25%] top-0 bottom-0 w-0.5 bg-blue-400" />
-          <div className="absolute left-[25%] -translate-x-1/2 -top-1 text-[10px] text-blue-400">P25</div>
-
-          {/* P50 marker (median) */}
-          <div className="absolute left-[50%] top-0 bottom-0 w-1 bg-emerald-400" />
-          <div className="absolute left-[50%] -translate-x-1/2 -top-1 text-[10px] text-emerald-400 font-bold">P50</div>
-
-          {/* P75 marker */}
-          <div className="absolute left-[75%] top-0 bottom-0 w-0.5 bg-amber-400" />
-          <div className="absolute left-[75%] -translate-x-1/2 -top-1 text-[10px] text-amber-400">P75</div>
-
-          {/* Price labels */}
-          <div className="absolute left-[25%] -translate-x-1/2 bottom-1 text-xs font-medium text-white">
-            {formatPrice(result.p25 || result.range_min)}
-          </div>
-          <div className="absolute left-[50%] -translate-x-1/2 bottom-1 text-xs font-bold text-white">
-            {formatPrice(result.p50 || result.market_median)}
-          </div>
-          <div className="absolute left-[75%] -translate-x-1/2 bottom-1 text-xs font-medium text-white">
-            {formatPrice(result.p75 || result.range_max)}
-          </div>
-        </div>
-      </div>
+      {/* Price Distribution Band */}
+      <PriceDistribution
+        min_clean={result.min_clean || result.range_min}
+        max_clean={result.max_clean || result.range_max}
+        p25={result.p25 || result.range_min}
+        p50={result.p50 || result.market_median}
+        p75={result.p75 || result.range_max}
+      />
 
       {/* Cosa fare adesso - Action guide */}
       <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-175">
@@ -336,14 +317,17 @@ export default function ValuationResultDisplay({ result, input }: Props) {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-sm text-[var(--text-muted)]">Annunci analizzati</p>
+              <p className="text-sm text-[var(--text-muted)]">Campione analizzato</p>
               <p className="text-xl font-bold text-emerald-400 mt-1">
-                {result.samples}
+                {result.samples} annunci
+              </p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                Basato su annunci reali simili al tuo veicolo
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${confidenceBadge.bg} ${confidenceBadge.text} border ${confidenceBadge.border}`}
-                  title={`Variabilita: ${((result.iqr_ratio || 0) * 100).toFixed(0)}%`}
+                  title={`Variabilità: ${((result.iqr_ratio || 0) * 100).toFixed(0)}%`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${confidenceBadge.dot}`} />
                   {confidenceBadge.label}
@@ -352,7 +336,7 @@ export default function ValuationResultDisplay({ result, input }: Props) {
               {/* Dealer/Private breakdown */}
               {(result.n_dealers !== undefined || result.n_private !== undefined) && (
                 <p className="text-xs text-[var(--text-muted)] mt-2">
-                  {result.n_dealers || 0} concessionari, {result.n_private || 0} privati
+                  {result.n_dealers || 0} da concessionari · {result.n_private || 0} da privati
                 </p>
               )}
             </div>
@@ -446,66 +430,32 @@ export default function ValuationResultDisplay({ result, input }: Props) {
         </div>
       </details>
 
-      {/* Share section */}
-      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-450">
-        <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-4 flex items-center gap-2">
-          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      {/* CTA Actions Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 opacity-0 animate-fade-in-up animate-delay-450">
+        {/* Primary CTA: New valuation */}
+        <Link
+          href="/"
+          className="btn-primary flex items-center justify-center gap-2 py-3"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          Nuova valutazione
+        </Link>
+
+        {/* Secondary CTA: Share */}
+        <button
+          onClick={() => {
+            handleShare('link');
+            setShowShareModal(true);
+          }}
+          className="btn-secondary flex items-center justify-center gap-2 py-3"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
           </svg>
-          Condividi valutazione
-        </h3>
-        <div className="flex flex-wrap gap-3">
-          {/* Copy link button */}
-          <button
-            onClick={() => {
-              const shareProps = handleShare('link');
-              const shareUrl = generateShareUrl();
-              navigator.clipboard.writeText(shareUrl);
-              trackShareCompleted(shareProps);
-              alert('Link copiato!');
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--obsidian-600)] hover:bg-[var(--obsidian-500)] border border-[var(--obsidian-500)] text-sm font-medium text-[var(--text-primary)] transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.193-9.193a4.5 4.5 0 00-6.364 6.364l4.5 4.5a4.5 4.5 0 006.364 0l1.757-1.757" />
-            </svg>
-            Copia link
-          </button>
-
-          {/* Download image button */}
-          <button
-            onClick={() => {
-              const shareProps = handleShare('image');
-              const ogUrl = `/api/og?brand=${encodeURIComponent(input.brand)}&model=${encodeURIComponent(input.model)}&year=${input.year}&p50=${result.p50 || result.market_median}&p25=${result.p25 || result.range_min}&p75=${result.p75 || result.range_max}&samples=${result.samples}&confidence=${result.confidence}`;
-              window.open(ogUrl, '_blank');
-              trackShareCompleted(shareProps);
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            Scarica immagine
-          </button>
-
-          {/* WhatsApp share */}
-          <button
-            onClick={() => {
-              const shareProps = handleShare('whatsapp');
-              const shareUrl = generateShareUrl();
-              const text = `Ho valutato la mia ${input.brand} ${input.model} (${input.year}) su VibeCar: ${formatPrice(result.p50 || result.market_median)} (range ${formatPrice(result.p25 || result.range_min)} - ${formatPrice(result.p75 || result.range_max)})`;
-              const url = `https://wa.me/?text=${encodeURIComponent(text + ' ' + shareUrl)}`;
-              window.open(url, '_blank');
-              trackShareCompleted(shareProps);
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-sm font-medium text-white transition-colors"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            WhatsApp
-          </button>
-        </div>
+          Condividi risultato
+        </button>
       </div>
 
       {/* Lead Form - GDPR compliant contact request */}
@@ -524,6 +474,30 @@ export default function ValuationResultDisplay({ result, input }: Props) {
           manutenzioni e altri fattori. Non costituisce un&apos;offerta di acquisto.
         </p>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        carInfo={{
+          brand: input.brand,
+          model: input.model,
+          year: input.year,
+          km: input.km,
+          fuel: input.fuel,
+        }}
+        valuation={{
+          p25: result.p25 || result.range_min,
+          p50: result.p50 || result.market_median,
+          p75: result.p75 || result.range_max,
+          samples: result.samples,
+          confidence: result.confidence,
+        }}
+        onShare={(type) => {
+          const shareProps = handleShare(type);
+          trackShareCompleted(shareProps);
+        }}
+      />
     </div>
   );
 }

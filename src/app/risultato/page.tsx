@@ -9,7 +9,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ValuationResultDisplay from '@/components/ValuationResult';
-import ContactForm from '@/components/ContactForm';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ValuationResult } from '@/lib/types';
 
@@ -138,64 +137,6 @@ export default function RisultatoPage() {
             result={result}
             input={input as { brand: string; model: string; year: string; km: string; fuel: string; gearbox: string; condition: string }}
           />
-
-          {/* Contact Form */}
-          <div className="mt-10">
-            <ContactForm
-              carInfo={{
-                brand: input.brand,
-                model: input.model,
-                year: input.year,
-                km: input.km,
-              }}
-              valuation={{
-                range_min: result.range_min,
-                range_max: result.range_max,
-              }}
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 opacity-0 animate-fade-in-up animate-delay-500">
-            <Link
-              href="/"
-              className="btn-secondary flex-1 text-center"
-            >
-              Nuova valutazione
-            </Link>
-            <button
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: `Valutazione ${input.brand} ${input.model}`,
-                    text: `Valore stimato: ${result.range_min.toLocaleString('it-IT')}€ - ${result.range_max.toLocaleString('it-IT')}€`,
-                    url: window.location.href,
-                  });
-                } else {
-                  navigator.clipboard.writeText(
-                    `${input.brand} ${input.model} ${input.year} - Valore: ${result.range_min.toLocaleString('it-IT')}€ - ${result.range_max.toLocaleString('it-IT')}€`
-                  );
-                  alert('Copiato negli appunti!');
-                }
-              }}
-              className="btn-secondary flex-1 flex items-center justify-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"
-                />
-              </svg>
-              Condividi
-            </button>
-          </div>
         </div>
       </div>
 
