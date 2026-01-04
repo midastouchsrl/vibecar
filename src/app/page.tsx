@@ -45,30 +45,30 @@ export default function Home() {
           {/* Headline */}
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 opacity-0 animate-fade-in-up animate-delay-100">
-              Scopri il{' '}
-              <span className="text-gradient-blue">vero valore</span>
+              Quanto vale{' '}
+              <span className="text-gradient-blue">davvero</span>
               <br />
-              della tua auto
+              la tua auto?
             </h1>
 
             <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mx-auto mb-4 opacity-0 animate-fade-in-up animate-delay-200">
-              Analisi intelligente basata su migliaia di annunci reali.
-              Risultato in pochi secondi.
+              Stima basata su annunci reali simili al tuo veicolo.
+              Range, mediana e affidabilità in pochi secondi.
             </p>
 
             {/* Trust indicators */}
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-[var(--text-muted)] opacity-0 animate-fade-in-up animate-delay-300">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[var(--success)]" />
-                <span>Dati aggiornati</span>
+                <span>Nessuna registrazione</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span>100% gratuito</span>
+                <span>Aggiornato automaticamente</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#6366f1]" />
-                <span>Mercato italiano</span>
+                <span>100% gratuito</span>
               </div>
             </div>
           </div>

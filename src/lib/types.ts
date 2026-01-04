@@ -36,13 +36,31 @@ export type ConfidenceLevel = 'bassa' | 'media' | 'alta';
 
 // Risultato valutazione API
 export interface ValuationResult {
+  // Prezzi principali
   range_min: number;       // Prezzo minimo range (P25)
   range_max: number;       // Prezzo massimo range (P75)
-  market_median: number;   // Mediana di mercato
+  market_median: number;   // Mediana di mercato (P50)
   dealer_buy_price: number; // Prezzo acquisto concessionario
-  samples: number;         // Numero annunci analizzati
+
+  // Percentili dettagliati
+  p25: number;
+  p50: number;
+  p75: number;
+
+  // Statistiche campione
+  samples: number;         // Numero annunci analizzati (dopo dedup)
+  samples_raw: number;     // Numero annunci grezzi (prima dedup)
+  n_dealers: number;       // Annunci da dealer
+  n_private: number;       // Annunci da privati
+  iqr_ratio: number;       // IQR/P50 - misura variabilita
+
+  // Affidabilita
   confidence: ConfidenceLevel;
   explanation: string;     // Spiegazione in italiano
+
+  // Metadata
+  updated_at: string;      // ISO timestamp ultimo aggiornamento
+  cached: boolean;         // Se proveniente da cache
   computed_from: {
     year_window: [number, number]; // [anno_min, anno_max]
     km_window: [number, number];   // [km_min, km_max]
@@ -60,14 +78,21 @@ export interface ValuationError {
 // Risposta API unificata
 export type ValuationResponse = ValuationResult | ValuationError;
 
-// Listing da data source
+// Listing da data source (arricchito con campi verificati)
 export interface CarListing {
-  price: number;
+  // Campi core (sempre presenti)
+  guid: string;           // ID univoco per dedup
+  price: number;          // Prezzo EUR
+  mileage: number;        // Km (intero)
+  firstRegistration: string; // MM-YYYY
+  fuelType: string;       // Codice (b,d,l,m,e,2,3)
+  sellerType: 'd' | 'p';  // Dealer o Privato
+
+  // Campi legacy per retrocompatibilita
   year: number;
   km: number;
   fuel?: string;
   gearbox?: string;
-  region?: string;
   title?: string;
   url?: string;
 }

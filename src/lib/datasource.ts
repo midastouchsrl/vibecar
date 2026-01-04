@@ -115,54 +115,74 @@ function buildSearchUrl(
 }
 
 /**
- * Estrae i prezzi dalla pagina HTML di AutoScout24
+ * Estrae un attributo data-* da un blocco HTML
+ */
+function extractDataAttr(block: string, attr: string): string | null {
+  const pattern = new RegExp(`${attr}="([^"]*)"`, 'i');
+  const match = block.match(pattern);
+  return match ? match[1] : null;
+}
+
+/**
+ * Estrae listing completi dalla pagina HTML di AutoScout24
+ * Usa i data-* attributes degli elementi <article>
  */
 function extractListingsFromHtml(html: string): CarListing[] {
   const listings: CarListing[] = [];
-  const seenPrices = new Set<number>();
+  const seenGuids = new Set<string>();
 
-  // Pattern 1: data-price="12345"
-  const pricePattern1 = /data-price="(\d+)"/g;
-  let match;
-  while ((match = pricePattern1.exec(html)) !== null) {
-    const price = parseInt(match[1], 10);
-    if (price > 500 && price < 500000 && !seenPrices.has(price)) {
-      seenPrices.add(price);
-      listings.push({ price, year: 0, km: 0 });
-    }
-  }
+  // Trova tutti i blocchi <article> che contengono data-price
+  // Splittiamo per "<article" e poi cerchiamo i data attributes
+  const articleBlocks = html.split('<article');
 
-  // Pattern 2: Prezzi nel formato €XX.XXX
-  const pricePattern2 = /[€]\s*([\d.]+)/g;
-  while ((match = pricePattern2.exec(html)) !== null) {
-    const priceStr = match[1].replace(/\./g, '');
+  for (const block of articleBlocks) {
+    // Verifica che sia un listing (ha data-price)
+    if (!block.includes('data-price=')) continue;
+
+    // Estrai tutti i campi
+    const guid = extractDataAttr(block, 'data-guid');
+    const priceStr = extractDataAttr(block, 'data-price');
+    const mileageStr = extractDataAttr(block, 'data-mileage');
+    const firstReg = extractDataAttr(block, 'data-first-registration');
+    const fuelType = extractDataAttr(block, 'data-fuel-type');
+    const sellerType = extractDataAttr(block, 'data-seller-type');
+
+    // Verifica campi obbligatori
+    if (!priceStr) continue;
+
     const price = parseInt(priceStr, 10);
-    if (price > 500 && price < 500000 && !seenPrices.has(price)) {
-      seenPrices.add(price);
-      listings.push({ price, year: 0, km: 0 });
+    if (price < 500 || price > 500000) continue;
+
+    // Genera GUID se mancante
+    const listingGuid = guid || `gen-${price}-${mileageStr || '0'}`;
+
+    // Evita duplicati
+    if (seenGuids.has(listingGuid)) continue;
+    seenGuids.add(listingGuid);
+
+    const mileage = mileageStr ? parseInt(mileageStr, 10) : 0;
+
+    // Estrai anno da first-registration (formato MM-YYYY)
+    let year = 0;
+    if (firstReg) {
+      const yearMatch = firstReg.match(/(\d{4})$/);
+      year = yearMatch ? parseInt(yearMatch[1], 10) : 0;
     }
+
+    listings.push({
+      guid: listingGuid,
+      price,
+      mileage,
+      firstRegistration: firstReg || '',
+      fuelType: fuelType || '',
+      sellerType: (sellerType === 'p' ? 'p' : 'd') as 'd' | 'p',
+      // Campi legacy per retrocompatibilita
+      year,
+      km: mileage,
+    });
   }
 
-  // Pattern 3: "price": 12345 nel JSON
-  const jsonPattern = /"price":\s*(\d+)/g;
-  while ((match = jsonPattern.exec(html)) !== null) {
-    const price = parseInt(match[1], 10);
-    if (price > 500 && price < 500000 && !seenPrices.has(price)) {
-      seenPrices.add(price);
-      listings.push({ price, year: 0, km: 0 });
-    }
-  }
-
-  // Pattern 4: "rawPrice": 12345
-  const rawPricePattern = /"rawPrice":\s*(\d+)/g;
-  while ((match = rawPricePattern.exec(html)) !== null) {
-    const price = parseInt(match[1], 10);
-    if (price > 500 && price < 500000 && !seenPrices.has(price)) {
-      seenPrices.add(price);
-      listings.push({ price, year: 0, km: 0 });
-    }
-  }
-
+  console.log(`[Extract] Trovati ${listings.length} listing con data attributes`);
   return listings;
 }
 
@@ -280,9 +300,9 @@ export async function fetchListingsMultiPage(
       break;
     }
 
-    // Pausa tra le richieste
+    // Pausa tra le richieste (rate limit: max 2 req/sec)
     if (page < maxPages) {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 

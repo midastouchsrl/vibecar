@@ -5,7 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { CarValuationInput } from '@/lib/types';
-import { validateInput, performValuation, isValuationError } from '@/lib/valuation';
+import { validateInput } from '@/lib/valuation';
+import { getOrComputeEstimate, isEstimateError } from '@/lib/estimate';
 import { getCacheHeaders } from '@/lib/cache';
 
 export async function POST(request: NextRequest) {
@@ -39,11 +40,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Esegui valutazione
-    const result = await performValuation(input as CarValuationInput);
+    // Esegui valutazione con nuovo servizio
+    const result = await getOrComputeEstimate(input as CarValuationInput);
 
     // Se errore, ritorna senza cache
-    if (isValuationError(result)) {
+    if (isEstimateError(result)) {
       return NextResponse.json(result, { status: 422 });
     }
 
