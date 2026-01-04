@@ -9,9 +9,9 @@ import ThemeToggle from '@/components/ThemeToggle';
 export default function Home() {
   return (
     <main className="min-h-screen relative overflow-hidden">
-      {/* Background gradient orbs */}
-      <div className="gradient-orb gradient-orb-purple w-[600px] h-[600px] -top-[200px] -right-[200px] fixed opacity-30" />
-      <div className="gradient-orb gradient-orb-purple w-[400px] h-[400px] top-[60%] -left-[100px] fixed opacity-20" />
+      {/* Background gradient orbs - brand teal */}
+      <div className="gradient-orb gradient-orb-teal w-[600px] h-[600px] -top-[200px] -right-[200px] fixed" />
+      <div className="gradient-orb gradient-orb-teal-muted w-[400px] h-[400px] top-[60%] -left-[100px] fixed" />
 
       {/* Hero Section */}
       <section className="relative pt-8 pb-12 md:pt-16 md:pb-20">
@@ -19,25 +19,18 @@ export default function Home() {
           {/* Header with Logo and Theme Toggle */}
           <div className="flex items-center justify-between mb-16 md:mb-24 opacity-0 animate-fade-in-up">
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"
-                    />
-                  </svg>
-                </div>
-                <div className="absolute -inset-1 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl blur opacity-30" />
-              </div>
-              <span className="text-xl font-semibold tracking-tight">VibeCar</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/brand/logo-regular-light.png"
+                alt="vibecar"
+                className="h-8 dark:block hidden"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/brand/logo-regular.png"
+                alt="vibecar"
+                className="h-8 dark:hidden block"
+              />
             </div>
             <ThemeToggle />
           </div>
@@ -46,7 +39,7 @@ export default function Home() {
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 opacity-0 animate-fade-in-up animate-delay-100">
               Quanto vale{' '}
-              <span className="text-gradient-blue">davvero</span>
+              <span className="text-gradient-brand">davvero</span>
               <br />
               la tua auto?
             </h1>
@@ -184,26 +177,22 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="relative py-8 border-t border-[var(--obsidian-800)]">
+      <footer className="relative py-8 border-t border-[var(--obsidian-700)]">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                <svg
-                  className="w-3 h-3 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"
-                  />
-                </svg>
-              </div>
-              <span className="text-sm font-medium">VibeCar</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/brand/logo-regular-light.png"
+                alt="vibecar"
+                className="h-5 dark:block hidden"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/brand/logo-regular.png"
+                alt="vibecar"
+                className="h-5 dark:hidden block"
+              />
             </div>
 
             <p className="text-xs text-[var(--text-muted)] text-center md:text-right">

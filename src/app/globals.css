@@ -1,32 +1,52 @@
 @import "tailwindcss";
 
 /* ============================================
-   VibeCar 2026 - Precision Luxury Design System
+   VibeCar 2026 - Brand Design System
    ============================================ */
 
 /* Dark Theme (default) */
 :root,
 .dark {
-  --obsidian-900: #0a0a0b;
-  --obsidian-800: #111113;
-  --obsidian-700: #1a1a1e;
-  --obsidian-600: #252529;
-  --obsidian-500: #35353b;
-  --obsidian-400: #4a4a52;
-  --obsidian-300: #6b6b75;
-  --obsidian-200: #9898a3;
-  --obsidian-100: #c5c5cc;
+  /* Brand Navy palette - derived from logo navy #1e293b */
+  --navy-950: #0f172a;
+  --navy-900: #1e293b;
+  --navy-800: #293548;
+  --navy-700: #334155;
+  --navy-600: #475569;
+  --navy-500: #64748b;
+  --navy-400: #94a3b8;
+  --navy-300: #cbd5e1;
+  --navy-200: #e2e8f0;
+  --navy-100: #f1f5f9;
 
-  /* Accent - Copper Metallic */
-  --copper-500: #c78d4e;
-  --copper-400: #d4a165;
-  --copper-300: #e2b77e;
-  --copper-glow: rgba(199, 141, 78, 0.15);
-  --copper-glow-strong: rgba(199, 141, 78, 0.3);
+  /* Accent - Brand Teal (from checkmark) */
+  --brand-500: #2dd4bf;
+  --brand-400: #5eead4;
+  --brand-300: #99f6e4;
+  --brand-glow: rgba(45, 212, 191, 0.15);
+  --brand-glow-strong: rgba(45, 212, 191, 0.3);
+
+  /* Legacy obsidian aliases - mapped to brand navy */
+  --obsidian-900: var(--navy-950);
+  --obsidian-800: var(--navy-900);
+  --obsidian-700: var(--navy-800);
+  --obsidian-600: var(--navy-700);
+  --obsidian-500: var(--navy-600);
+  --obsidian-400: var(--navy-500);
+  --obsidian-300: var(--navy-400);
+  --obsidian-200: var(--navy-300);
+  --obsidian-100: var(--navy-200);
+
+  /* Legacy copper aliases for backwards compatibility */
+  --copper-500: var(--brand-500);
+  --copper-400: var(--brand-400);
+  --copper-300: var(--brand-300);
+  --copper-glow: var(--brand-glow);
+  --copper-glow-strong: var(--brand-glow-strong);
 
   /* Semantic */
-  --success: #4ade80;
-  --success-muted: rgba(74, 222, 128, 0.15);
+  --success: #2dd4bf;
+  --success-muted: rgba(45, 212, 191, 0.15);
   --warning: #fbbf24;
   --warning-muted: rgba(251, 191, 36, 0.15);
   --error: #f87171;
@@ -34,63 +54,91 @@
 
   /* Typography */
   --text-primary: #ffffff;
-  --text-secondary: #9898a3;
-  --text-muted: #6b6b75;
-  --text-placeholder: #4a4a52;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-placeholder: #475569;
 
   /* Effects */
-  --glass-bg: rgba(26, 26, 30, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-highlight: rgba(255, 255, 255, 0.03);
+  --glass-bg: rgba(30, 41, 59, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
 
-  /* Orb colors for dark theme */
-  --orb-copper: var(--copper-500);
-  --orb-purple: #6366f1;
-  --orb-opacity: 0.3;
+  /* Background */
+  --bg-gradient-start: #0f172a;
+  --bg-gradient-end: #1e293b;
+
+  /* Orb colors - brand teal based */
+  --orb-teal: var(--brand-500);
+  --orb-teal-muted: #14b8a6;
+  --orb-opacity: 0.15;
 }
 
 /* Light Theme */
 .light {
-  --obsidian-900: #ffffff;
-  --obsidian-800: #f8f9fa;
-  --obsidian-700: #f1f3f5;
-  --obsidian-600: #e9ecef;
-  --obsidian-500: #dee2e6;
-  --obsidian-400: #ced4da;
-  --obsidian-300: #adb5bd;
-  --obsidian-200: #6c757d;
-  --obsidian-100: #495057;
+  /* Brand Navy palette inverted for light theme */
+  --navy-950: #ffffff;
+  --navy-900: #f8fafc;
+  --navy-800: #f1f5f9;
+  --navy-700: #e2e8f0;
+  --navy-600: #cbd5e1;
+  --navy-500: #94a3b8;
+  --navy-400: #64748b;
+  --navy-300: #475569;
+  --navy-200: #334155;
+  --navy-100: #1e293b;
 
-  /* Accent - Deeper Copper for light bg */
-  --copper-500: #b37a3a;
-  --copper-400: #c78d4e;
-  --copper-300: #d4a165;
-  --copper-glow: rgba(179, 122, 58, 0.12);
-  --copper-glow-strong: rgba(179, 122, 58, 0.25);
+  /* Legacy obsidian aliases */
+  --obsidian-900: var(--navy-950);
+  --obsidian-800: var(--navy-900);
+  --obsidian-700: var(--navy-800);
+  --obsidian-600: var(--navy-700);
+  --obsidian-500: var(--navy-600);
+  --obsidian-400: var(--navy-500);
+  --obsidian-300: var(--navy-400);
+  --obsidian-200: var(--navy-300);
+  --obsidian-100: var(--navy-200);
+
+  /* Accent - Darker Teal for light bg */
+  --brand-500: #14b8a6;
+  --brand-400: #2dd4bf;
+  --brand-300: #5eead4;
+  --brand-glow: rgba(20, 184, 166, 0.12);
+  --brand-glow-strong: rgba(20, 184, 166, 0.25);
+
+  /* Legacy copper aliases for backwards compatibility */
+  --copper-500: var(--brand-500);
+  --copper-400: var(--brand-400);
+  --copper-300: var(--brand-300);
+  --copper-glow: var(--brand-glow);
+  --copper-glow-strong: var(--brand-glow-strong);
 
   /* Semantic - slightly darker for contrast */
-  --success: #22c55e;
-  --success-muted: rgba(34, 197, 94, 0.12);
+  --success: #14b8a6;
+  --success-muted: rgba(20, 184, 166, 0.12);
   --warning: #f59e0b;
   --warning-muted: rgba(245, 158, 11, 0.12);
   --error: #ef4444;
   --error-muted: rgba(239, 68, 68, 0.12);
 
-  /* Typography */
-  --text-primary: #1a1a1e;
-  --text-secondary: #4a4a52;
-  --text-muted: #6b6b75;
-  --text-placeholder: #9898a3;
+  /* Typography - using brand navy */
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-placeholder: #94a3b8;
 
   /* Effects */
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(30, 41, 59, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.5);
 
-  /* Orb colors for light theme - softer pastels */
-  --orb-copper: #f5d0a9;
-  --orb-purple: #c4b5fd;
-  --orb-opacity: 0.5;
+  /* Background - clean white to light gray */
+  --bg-gradient-start: #ffffff;
+  --bg-gradient-end: #f8fafc;
+
+  /* Orb colors for light theme - subtle teal */
+  --orb-teal: #99f6e4;
+  --orb-teal-muted: #5eead4;
+  --orb-opacity: 0.3;
 }
 
 @theme inline {
@@ -113,23 +161,14 @@ html {
 }
 
 body {
-  background: var(--obsidian-900);
+  background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Noise texture overlay */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  opacity: 0.03;
-  pointer-events: none;
-  z-index: 9999;
-}
 
 /* ============================================
    Typography
@@ -391,19 +430,29 @@ label.checkbox-label,
 .gradient-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
+  filter: blur(100px);
   pointer-events: none;
   z-index: -1;
 }
 
+.gradient-orb-teal {
+  background: radial-gradient(circle, var(--orb-teal) 0%, transparent 70%);
+  opacity: var(--orb-opacity);
+}
+
+.gradient-orb-teal-muted {
+  background: radial-gradient(circle, var(--orb-teal-muted) 0%, transparent 70%);
+  opacity: var(--orb-opacity);
+}
+
+/* Legacy aliases */
 .gradient-orb-copper {
-  background: radial-gradient(circle, var(--orb-copper) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--orb-teal) 0%, transparent 70%);
   opacity: var(--orb-opacity);
 }
 
 .gradient-orb-purple {
-  background: radial-gradient(circle, var(--orb-purple) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--orb-teal-muted) 0%, transparent 70%);
   opacity: var(--orb-opacity);
 }
 
@@ -518,8 +567,9 @@ label.checkbox-label,
    Utility classes
    ============================================ */
 
-.text-gradient-copper {
-  background: linear-gradient(135deg, var(--copper-300) 0%, var(--copper-500) 100%);
+.text-gradient-copper,
+.text-gradient-brand {
+  background: linear-gradient(135deg, var(--brand-300) 0%, var(--brand-500) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

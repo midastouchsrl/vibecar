@@ -39,8 +39,8 @@ export default function RisultatoPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        {/* Background orbs */}
-        <div className="gradient-orb gradient-orb-purple w-[500px] h-[500px] top-[20%] right-[10%] fixed opacity-20" />
+        {/* Background orbs - brand teal */}
+        <div className="gradient-orb gradient-orb-teal w-[500px] h-[500px] top-[20%] right-[10%] fixed" />
 
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
@@ -73,9 +73,9 @@ export default function RisultatoPage() {
 
   return (
     <main className="min-h-screen relative overflow-hidden">
-      {/* Background orbs */}
-      <div className="gradient-orb gradient-orb-purple w-[600px] h-[600px] -top-[200px] -right-[200px] fixed opacity-25" />
-      <div className="gradient-orb gradient-orb-purple w-[400px] h-[400px] bottom-[10%] -left-[100px] fixed opacity-15" />
+      {/* Background orbs - brand teal */}
+      <div className="gradient-orb gradient-orb-teal w-[600px] h-[600px] -top-[200px] -right-[200px] fixed" />
+      <div className="gradient-orb gradient-orb-teal-muted w-[400px] h-[400px] bottom-[10%] -left-[100px] fixed" />
 
       {/* Header */}
       <header className="relative py-6 border-b border-[var(--obsidian-700)]">
@@ -102,24 +102,18 @@ export default function RisultatoPage() {
             </Link>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"
-                    />
-                  </svg>
-                </div>
-                <span className="text-sm font-semibold">VibeCar</span>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/brand/logo-regular-light.png"
+                alt="vibecar"
+                className="h-6 dark:block hidden"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/brand/logo-regular.png"
+                alt="vibecar"
+                className="h-6 dark:hidden block"
+              />
               <ThemeToggle />
             </div>
           </div>
@@ -141,10 +135,10 @@ export default function RisultatoPage() {
       </div>
 
       {/* Footer */}
-      <footer className="relative py-6 border-t border-[var(--obsidian-800)] mt-auto">
+      <footer className="relative py-6 border-t border-[var(--obsidian-700)] mt-auto">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="text-xs text-[var(--text-muted)]">
-            VibeCar - Valutazione indicativa basata su dati pubblici di mercato
+            vibecar - Valutazione indicativa basata su dati pubblici di mercato
           </p>
         </div>
       </footer>

@@ -8,8 +8,14 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
+// Brand colors from logo
+const BRAND_NAVY = '#1e293b';
+const BRAND_TEAL = '#2dd4bf';
+
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const url = new URL(request.url);
+  const baseUrl = `${url.protocol}//${url.host}`;
+  const { searchParams } = url;
 
   // Get params from URL
   const brand = searchParams.get('brand') || 'Auto';
@@ -45,14 +51,14 @@ export async function GET(request: NextRequest) {
     year: 'numeric',
   });
 
-  // Confidence config
-  const confidenceConfig: Record<string, { bg: string; text: string; label: string }> = {
-    alta: { bg: '#dcfce7', text: '#166534', label: 'Alta affidabilità' },
-    media: { bg: '#fef9c3', text: '#854d0e', label: 'Media affidabilità' },
-    bassa: { bg: '#fee2e2', text: '#991b1b', label: 'Bassa affidabilità' },
+  // Precision config - marketing-friendly labels
+  const precisionConfig: Record<string, { bg: string; text: string; label: string }> = {
+    alta: { bg: '#dcfce7', text: '#166534', label: 'Precisione elevata' },
+    media: { bg: '#fef9c3', text: '#854d0e', label: 'Buona precisione' },
+    bassa: { bg: '#fee2e2', text: '#991b1b', label: 'Stima indicativa' },
   };
 
-  const conf = confidenceConfig[confidence] || confidenceConfig.media;
+  const conf = precisionConfig[confidence] || precisionConfig.media;
 
   // A4 ratio dimensions (roughly 1:1.414)
   const width = 1080;
@@ -79,58 +85,48 @@ export async function GET(request: NextRequest) {
             alignItems: 'flex-start',
             marginBottom: '40px',
             paddingBottom: '24px',
-            borderBottom: '2px solid #e5e7eb',
+            borderBottom: `2px solid ${BRAND_TEAL}`,
           }}
         >
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #10b981, #0d9488)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2.5"
-              >
-                <path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-              </svg>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ color: '#111827', fontSize: '28px', fontWeight: 700 }}>VibeCar</span>
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>Report valutazione veicolo</span>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${baseUrl}/images/brand/logo-dark.png`}
+              height="40"
+              alt="vibecar"
+            />
           </div>
 
-          {/* Date & ID */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <span style={{ color: '#6b7280', fontSize: '14px' }}>{today}</span>
-            {estimateId && (
-              <span style={{ color: '#9ca3af', fontSize: '12px', fontFamily: 'monospace' }}>
-                ID: {estimateId.slice(0, 8)}
-              </span>
-            )}
+          {/* Badge & Date */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {/* Verification Badge */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${baseUrl}/images/brand/badge-dark.png`}
+              width="48"
+              height="48"
+              alt=""
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <span style={{ color: '#6b7280', fontSize: '14px' }}>{today}</span>
+              {estimateId && (
+                <span style={{ color: '#9ca3af', fontSize: '12px', fontFamily: 'monospace' }}>
+                  ID: {estimateId.slice(0, 8)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Vehicle info */}
-        <div style={{ marginBottom: '40px' }}>
+        <div style={{ marginBottom: '40px', display: 'flex', flexDirection: 'column' }}>
           <span style={{ color: '#9ca3af', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>
             Veicolo valutato
           </span>
-          <h1 style={{ color: '#111827', fontSize: '42px', fontWeight: 700, margin: '8px 0' }}>
+          <span style={{ color: '#111827', fontSize: '42px', fontWeight: 700, marginTop: '8px', marginBottom: '8px' }}>
             {brand} {model}
-          </h1>
+          </span>
           <div style={{ display: 'flex', gap: '24px', color: '#6b7280', fontSize: '18px' }}>
             <span>Anno: {year}</span>
             <span>Chilometraggio: {formatKm(km)}</span>
@@ -145,24 +141,24 @@ export async function GET(request: NextRequest) {
             flexDirection: 'column',
             padding: '40px',
             borderRadius: '20px',
-            background: 'linear-gradient(135deg, #ecfdf5, #f0fdfa)',
-            border: '2px solid #10b981',
+            background: 'linear-gradient(135deg, #f0fdfa, #ecfdf5)',
+            border: `2px solid ${BRAND_TEAL}`,
             marginBottom: '32px',
           }}
         >
-          <span style={{ color: '#065f46', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>
+          <span style={{ color: BRAND_NAVY, fontSize: '16px', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>
             Valore di mercato stimato
           </span>
-          <span style={{ color: '#059669', fontSize: '64px', fontWeight: 700, lineHeight: 1 }}>
+          <span style={{ color: '#0d9488', fontSize: '64px', fontWeight: 700, lineHeight: 1 }}>
             {formatPrice(p50)}
           </span>
           <div style={{ display: 'flex', gap: '32px', marginTop: '24px' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>Valore minimo (P25)</span>
+              <span style={{ color: '#6b7280', fontSize: '14px' }}>Prezzo minimo</span>
               <span style={{ color: '#3b82f6', fontSize: '28px', fontWeight: 600 }}>{formatPrice(p25)}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>Valore massimo (P75)</span>
+              <span style={{ color: '#6b7280', fontSize: '14px' }}>Prezzo massimo</span>
               <span style={{ color: '#f59e0b', fontSize: '28px', fontWeight: 600 }}>{formatPrice(p75)}</span>
             </div>
           </div>
@@ -182,12 +178,12 @@ export async function GET(request: NextRequest) {
               border: '1px solid #e5e7eb',
             }}
           >
-            <span style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>Campione analizzato</span>
+            <span style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>Veicoli analizzati</span>
             <span style={{ color: '#111827', fontSize: '32px', fontWeight: 700 }}>{samples}</span>
-            <span style={{ color: '#6b7280', fontSize: '14px' }}>annunci reali simili</span>
+            <span style={{ color: '#6b7280', fontSize: '14px' }}>in vendita sul mercato</span>
           </div>
 
-          {/* Confidence */}
+          {/* Precision */}
           <div
             style={{
               flex: 1,
@@ -199,7 +195,7 @@ export async function GET(request: NextRequest) {
               border: '1px solid #e5e7eb',
             }}
           >
-            <span style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>Affidabilità stima</span>
+            <span style={{ color: '#6b7280', fontSize: '14px', marginBottom: '8px' }}>Precisione stima</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div
                 style={{
@@ -222,16 +218,16 @@ export async function GET(request: NextRequest) {
             background: '#f9fafb',
             border: '1px solid #e5e7eb',
             marginBottom: '40px',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <span style={{ color: '#111827', fontSize: '16px', fontWeight: 600, marginBottom: '8px', display: 'block' }}>
+          <span style={{ color: '#111827', fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>
             Come leggere questa valutazione
           </span>
-          <p style={{ color: '#6b7280', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-            Il valore centrale rappresenta la mediana dei prezzi di mercato per veicoli simili.
-            Il range P25-P75 indica l&apos;intervallo in cui si trova il 50% degli annunci analizzati.
-            Questa è una stima indicativa basata su dati pubblici di mercato.
-          </p>
+          <span style={{ color: '#6b7280', fontSize: '14px', lineHeight: 1.6 }}>
+            Il valore centrale rappresenta il prezzo di vendita più probabile per veicoli simili al tuo. L'intervallo minimo-massimo indica la fascia in cui la maggior parte dei veicoli viene venduta.
+          </span>
         </div>
 
         {/* Footer */}
@@ -241,11 +237,11 @@ export async function GET(request: NextRequest) {
               Valutazione generata automaticamente
             </span>
             <span style={{ color: '#9ca3af', fontSize: '12px' }}>
-              Non costituisce un&apos;offerta di acquisto
+              Non costituisce un'offerta di acquisto
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: '#10b981', fontSize: '18px', fontWeight: 600 }}>vibecar.it</span>
+            <span style={{ color: BRAND_TEAL, fontSize: '18px', fontWeight: 600 }}>vibecar.it</span>
           </div>
         </div>
       </div>

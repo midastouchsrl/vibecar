@@ -8,8 +8,14 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
+// Brand colors from logo
+const BRAND_NAVY = '#1e293b';
+const BRAND_TEAL = '#2dd4bf';
+
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const url = new URL(request.url);
+  const baseUrl = `${url.protocol}//${url.host}`;
+  const { searchParams } = url;
 
   // Get params from URL
   const brand = searchParams.get('brand') || 'Auto';
@@ -37,14 +43,14 @@ export async function GET(request: NextRequest) {
     return `${num.toLocaleString('it-IT')} km`;
   };
 
-  // Confidence config
-  const confidenceConfig: Record<string, { bg: string; text: string; label: string }> = {
-    alta: { bg: '#065f46', text: '#34d399', label: 'Alta affidabilità' },
-    media: { bg: '#854d0e', text: '#fbbf24', label: 'Media affidabilità' },
-    bassa: { bg: '#991b1b', text: '#f87171', label: 'Bassa affidabilità' },
+  // Precision config - marketing-friendly labels with brand colors
+  const precisionConfig: Record<string, { bg: string; text: string; label: string }> = {
+    alta: { bg: '#065f46', text: BRAND_TEAL, label: 'Precisione elevata' },
+    media: { bg: '#854d0e', text: '#fbbf24', label: 'Buona precisione' },
+    bassa: { bg: '#991b1b', text: '#f87171', label: 'Stima indicativa' },
   };
 
-  const conf = confidenceConfig[confidence] || confidenceConfig.media;
+  const conf = precisionConfig[confidence] || precisionConfig.media;
 
   return new ImageResponse(
     (
@@ -54,12 +60,12 @@ export async function GET(request: NextRequest) {
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          background: 'linear-gradient(180deg, #0f0f11 0%, #1a1a2e 50%, #0f0f11 100%)',
+          background: `linear-gradient(180deg, #0c1117 0%, ${BRAND_NAVY} 50%, #0c1117 100%)`,
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        {/* Background decorations */}
+        {/* Background decorations - brand teal glow */}
         <div
           style={{
             position: 'absolute',
@@ -68,7 +74,7 @@ export async function GET(request: NextRequest) {
             width: '600px',
             height: '600px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)',
+            background: `radial-gradient(circle, rgba(45, 212, 191, 0.15) 0%, transparent 70%)`,
           }}
         />
         <div
@@ -79,9 +85,27 @@ export async function GET(request: NextRequest) {
             width: '400px',
             height: '400px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)',
           }}
         />
+
+        {/* Verification Badge - Top Right */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '60px',
+            right: '60px',
+            display: 'flex',
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${baseUrl}/images/brand/badge-dark.png`}
+            width="80"
+            height="80"
+            alt=""
+          />
+        </div>
 
         {/* Header with logo */}
         <div
@@ -92,39 +116,12 @@ export async function GET(request: NextRequest) {
             paddingBottom: '40px',
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-            }}
-          >
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #10b981, #0d9488)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2.5"
-              >
-                <path d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-              </svg>
-            </div>
-            <span style={{ color: 'white', fontSize: '36px', fontWeight: 700, letterSpacing: '-0.5px' }}>
-              VibeCar
-            </span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${baseUrl}/images/brand/logo-light.png`}
+            height="56"
+            alt="vibecar"
+          />
         </div>
 
         {/* Spacer */}
@@ -188,7 +185,7 @@ export async function GET(request: NextRequest) {
               alignItems: 'center',
               padding: '48px 80px',
               borderRadius: '32px',
-              background: 'linear-gradient(135deg, #059669, #0d9488, #0891b2)',
+              background: `linear-gradient(135deg, ${BRAND_TEAL}, #14b8a6, #0d9488)`,
               marginBottom: '40px',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
             }}
@@ -246,8 +243,8 @@ export async function GET(request: NextRequest) {
                 background: 'rgba(255,255,255,0.1)',
               }}
             >
-              <span style={{ color: '#9ca3af', fontSize: '22px' }}>Campione:</span>
-              <span style={{ color: 'white', fontSize: '22px', fontWeight: 600 }}>{samples} annunci</span>
+              <span style={{ color: '#9ca3af', fontSize: '22px' }}>Basato su</span>
+              <span style={{ color: 'white', fontSize: '22px', fontWeight: 600 }}>{samples} veicoli</span>
             </div>
             <div
               style={{
@@ -296,7 +293,7 @@ export async function GET(request: NextRequest) {
             }}
           >
             <span style={{ color: '#9ca3af', fontSize: '24px' }}>Valuta anche la tua su</span>
-            <span style={{ color: '#10b981', fontSize: '24px', fontWeight: 600 }}>vibecar.it</span>
+            <span style={{ color: BRAND_TEAL, fontSize: '24px', fontWeight: 600 }}>vibecar.it</span>
           </div>
         </div>
       </div>
