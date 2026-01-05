@@ -15,6 +15,7 @@ import {
   POWER_RANGES,
   ITALIAN_REGIONS,
 } from '@/lib/config';
+import { getModelFuels, getFuelDataSource } from '@/lib/model-fuels';
 import {
   trackStartEstimate,
   startEstimateTiming,
@@ -147,7 +148,7 @@ export default function ValuationForm() {
     fetchYears();
   }, [makeId, modelId]);
 
-  // Reset fuel when model changes - always show all fuel options
+  // Reset fuel when model changes
   useEffect(() => {
     if (!makeId || !modelId) {
       setFuel('');
@@ -165,8 +166,25 @@ export default function ValuationForm() {
     return YEAR_OPTIONS;
   }, [yearsLoaded, availableYears]);
 
-  // Always show all fuel options - let the valuation handle unavailable combinations
-  const fuelOptions = FUEL_OPTIONS;
+  // Compute fuel options based on model/brand database
+  const fuelOptions = useMemo(() => {
+    if (!makeId) {
+      // Nessun brand selezionato: mostra tutte le opzioni
+      return FUEL_OPTIONS;
+    }
+
+    // Ottieni le alimentazioni dal database (modello specifico o fallback brand)
+    const availableFuels = getModelFuels(makeId, modelId || 0);
+
+    // Filtra FUEL_OPTIONS per mantenere solo quelle disponibili, preservando l'ordine
+    return FUEL_OPTIONS.filter(opt => availableFuels.includes(opt.value as typeof availableFuels[number]));
+  }, [makeId, modelId]);
+
+  // Info sulla fonte dati alimentazione (per eventuale UI)
+  const fuelDataSource = useMemo(() => {
+    if (!makeId || !modelId) return null;
+    return getFuelDataSource(makeId, modelId);
+  }, [makeId, modelId]);
 
   // Get selected make and model names for submission
   const getSelectedMakeName = () => {
@@ -345,13 +363,22 @@ export default function ValuationForm() {
       {/* Fuel and Gearbox */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
         <div className="space-y-2">
-          <label htmlFor="fuel">Alimentazione</label>
+          <label htmlFor="fuel">
+            Alimentazione
+            {modelId && fuelOptions.length < FUEL_OPTIONS.length && (
+              <span className="ml-2 text-xs text-[var(--text-muted)]">
+                ({fuelOptions.length} disponibil{fuelOptions.length === 1 ? 'e' : 'i'})
+              </span>
+            )}
+          </label>
           <SearchableSelect
             id="fuel"
             options={fuelOptions}
             value={fuel}
             onChange={setFuel}
             placeholder="Cerca alimentazione..."
+            disabled={!modelId}
+            disabledText="Prima seleziona modello"
           />
         </div>
 
