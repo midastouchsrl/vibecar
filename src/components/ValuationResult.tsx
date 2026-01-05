@@ -247,36 +247,50 @@ export default function ValuationResultDisplay({ result, input }: Props) {
               </p>
             </div>
 
-            {/* Range bar visual */}
+            {/* Range bar visual - Multi-color gradient */}
             <div className="relative mb-6">
-              <div className="h-3 rounded-full bg-teal-950/50 border border-teal-700/50 overflow-hidden">
-                {/* Gradient fill */}
+              {/* Track with gradient range */}
+              <div className="h-4 rounded-full bg-slate-800/80 border border-slate-600/50 overflow-hidden relative">
+                {/* Multi-color gradient fill - blue to emerald to amber */}
                 <div
-                  className="h-full bg-gradient-to-r from-teal-500/50 via-teal-300 to-teal-500/50 rounded-full relative"
+                  className="absolute h-full bg-gradient-to-r from-blue-500 via-emerald-400 to-amber-500 rounded-full shadow-lg"
                   style={{
-                    marginLeft: `${Math.max(0, rangeMinPos - 5)}%`,
-                    width: `${Math.min(100, rangeMaxPos - rangeMinPos + 10)}%`,
+                    left: `${Math.max(0, rangeMinPos - 2)}%`,
+                    width: `${Math.min(100, rangeMaxPos - rangeMinPos + 4)}%`,
                   }}
-                >
-                  {/* Central marker */}
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_10px_rgba(94,234,212,0.8)] border-2 border-teal-300"
-                    style={{
-                      left: `${((centralPos - rangeMinPos + 5) / (rangeMaxPos - rangeMinPos + 10)) * 100}%`,
-                      transform: 'translateX(-50%) translateY(-50%)'
-                    }}
-                  />
-                </div>
+                />
+
+                {/* Min marker (blue) */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-5 bg-blue-400 rounded-sm border border-white/50 shadow-lg"
+                  style={{ left: `${rangeMinPos}%`, transform: 'translateX(-50%) translateY(-50%)' }}
+                />
+
+                {/* Central marker (emerald) - larger, prominent */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-5 h-6 bg-white rounded-sm shadow-[0_0_15px_rgba(52,211,153,0.8)] border-2 border-emerald-400 z-10"
+                  style={{ left: `${centralPos}%`, transform: 'translateX(-50%) translateY(-50%)' }}
+                />
+
+                {/* Max marker (amber) */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-5 bg-amber-400 rounded-sm border border-white/50 shadow-lg"
+                  style={{ left: `${rangeMaxPos}%`, transform: 'translateX(-50%) translateY(-50%)' }}
+                />
               </div>
-              {/* Range labels */}
-              <div className="flex justify-between mt-3">
+
+              {/* Range labels with colors */}
+              <div className="flex justify-between items-start mt-4">
                 <div className="text-left">
-                  <div className="text-lg font-semibold text-teal-200">{formatPrice(rangeMin)}</div>
-                  <div className="text-xs text-teal-400/70">Min. probabile</div>
+                  <div className="text-lg font-bold text-blue-300">{formatPrice(rangeMin)}</div>
+                  <div className="text-xs text-blue-400/80">Vendita rapida</div>
+                </div>
+                <div className="text-center -mt-1">
+                  <div className="text-xs text-emerald-400/80 mb-1">Il più probabile</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-semibold text-teal-200">{formatPrice(rangeMax)}</div>
-                  <div className="text-xs text-teal-400/70">Max. probabile</div>
+                  <div className="text-lg font-bold text-amber-300">{formatPrice(rangeMax)}</div>
+                  <div className="text-xs text-amber-400/80">Massimo ottenibile</div>
                 </div>
               </div>
             </div>
@@ -290,52 +304,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
       </div>
 
       {/* ============================================
-          BLOCCO 2 — ANDAMENTO DEI PREZZI (GRAFICO)
+          BLOCCO 2 — LETTURA DEL MERCATO (SEMANTICA)
           ============================================ */}
-      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-150 border-l-4 border-l-teal-500/50">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-slate-200 mb-5 flex items-center gap-2">
-          <svg className="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-          </svg>
-          Andamento dei prezzi sul mercato
-        </h3>
-
-        {/* Market Range Band */}
-        <div className="relative py-4">
-          {/* Background track - observed range */}
-          <div className="h-2.5 bg-gray-200 dark:bg-slate-700/50 rounded-full relative">
-            {/* Highlighted band - probable range */}
-            <div
-              className="absolute h-full bg-gradient-to-r from-teal-500/40 via-teal-400/70 to-teal-500/40 rounded-full"
-              style={{
-                left: `${rangeMinPos}%`,
-                width: `${rangeMaxPos - rangeMinPos}%`,
-              }}
-            />
-
-            {/* Central value marker */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-teal-500 dark:bg-teal-400 rounded-full border-2 border-white dark:border-slate-800 shadow-lg shadow-teal-500/30"
-              style={{ left: `${centralPos}%`, transform: 'translateX(-50%) translateY(-50%)' }}
-            />
-          </div>
-
-          {/* Labels */}
-          <div className="flex justify-between mt-3 text-xs text-gray-500 dark:text-slate-400">
-            <span>{formatPrice(observedMin)}</span>
-            <span>{formatPrice(observedMax)}</span>
-          </div>
-        </div>
-
-        <p className="text-xs text-gray-500 dark:text-slate-400 mt-4 leading-relaxed">
-          Questa visualizzazione mostra dove si collocano i prezzi per veicoli comparabili al tuo, evidenziando la fascia più coerente con il mercato.
-        </p>
-      </div>
-
-      {/* ============================================
-          BLOCCO 3 — LETTURA DEL MERCATO (SEMANTICA)
-          ============================================ */}
-      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-200 border-l-4 border-l-cyan-500/50">
+      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-150 border-l-4 border-l-cyan-500/50">
         <h3 className="text-sm font-medium text-gray-700 dark:text-slate-200 mb-4 flex items-center gap-2">
           <svg className="w-4 h-4 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
@@ -353,9 +324,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
       </div>
 
       {/* ============================================
-          BLOCCO 4 — CANALI DI VENDITA (PARTNER-SAFE)
+          BLOCCO 3 — CANALI DI VENDITA (PARTNER-SAFE)
           ============================================ */}
-      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-250 border-l-4 border-l-emerald-500/50">
+      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-200 border-l-4 border-l-emerald-500/50">
         <h3 className="text-sm font-medium text-gray-700 dark:text-slate-200 mb-2 flex items-center gap-2">
           <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
@@ -393,13 +364,13 @@ export default function ValuationResultDisplay({ result, input }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21" />
                 </svg>
               </div>
-              <span className="text-sm font-medium text-gray-900 dark:text-white">Canale professionale</span>
+              <span className="text-sm font-medium text-gray-900 dark:text-white">Concessionari e rivenditori</span>
             </div>
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">
               {formatPrice(professionalChannel)}
             </div>
             <p className="text-xs text-gray-500 dark:text-slate-400 leading-relaxed">
-              Le valutazioni tramite canali professionali riflettono servizi, gestione della rivendita e tempi più rapidi.
+              Vendita a concessionari o rivenditori professionisti. Offerta solitamente inferiore, ma con ritiro immediato e zero pensieri.
             </p>
           </div>
         </div>
@@ -410,9 +381,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
       </div>
 
       {/* ============================================
-          BLOCCO 5 — CONFRONTO VISIVO DEI CANALI
+          BLOCCO 4 — CONFRONTO VISIVO DEI CANALI
           ============================================ */}
-      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-300 border-l-4 border-l-blue-500/50">
+      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-250 border-l-4 border-l-blue-500/50">
         <h3 className="text-sm font-medium text-gray-700 dark:text-slate-200 mb-4 flex items-center gap-2">
           <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
@@ -436,10 +407,10 @@ export default function ValuationResultDisplay({ result, input }: Props) {
             </div>
           </div>
 
-          {/* Canale professionale */}
+          {/* Concessionari e rivenditori */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-600 dark:text-slate-300">Canale professionale</span>
+              <span className="text-xs text-gray-600 dark:text-slate-300">Concessionari e rivenditori</span>
               <span className="text-xs font-medium text-blue-600 dark:text-blue-400">{formatPrice(professionalChannel)}</span>
             </div>
             <div className="h-3 bg-gray-200 dark:bg-slate-700/50 rounded-full relative overflow-hidden">
@@ -457,9 +428,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
       </div>
 
       {/* ============================================
-          BLOCCO 6 — COME USARE QUESTA VALUTAZIONE
+          BLOCCO 5 — COME USARE QUESTA VALUTAZIONE
           ============================================ */}
-      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-350 border-l-4 border-l-amber-500/50">
+      <div className="glass-card p-5 opacity-0 animate-fade-in-up animate-delay-300 border-l-4 border-l-amber-500/50">
         <h3 className="text-sm font-medium text-gray-700 dark:text-slate-200 mb-4 flex items-center gap-2">
           <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
@@ -496,7 +467,7 @@ export default function ValuationResultDisplay({ result, input }: Props) {
       </div>
 
       {/* ============================================
-          BLOCCO 7 — LEAD FORM (RICHIESTA CONTATTO)
+          BLOCCO 6 — LEAD FORM (RICHIESTA CONTATTO)
           ============================================ */}
       <LeadForm
         confidence={result.confidence}
@@ -505,9 +476,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
       />
 
       {/* ============================================
-          BLOCCO 8 — CTA FINALI
+          BLOCCO 7 — CTA FINALI
           ============================================ */}
-      <div className="space-y-3 opacity-0 animate-fade-in-up animate-delay-400">
+      <div className="space-y-3 opacity-0 animate-fade-in-up animate-delay-350">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Nuova valutazione - secondary */}
           <Link
@@ -541,7 +512,7 @@ export default function ValuationResultDisplay({ result, input }: Props) {
       </div>
 
       {/* Disclaimer */}
-      <p className="text-xs text-gray-500 dark:text-slate-400 text-center opacity-0 animate-fade-in-up animate-delay-450">
+      <p className="text-xs text-gray-500 dark:text-slate-400 text-center opacity-0 animate-fade-in-up animate-delay-400">
         Valutazione indicativa basata su dati di mercato pubblicamente disponibili. Non costituisce offerta di acquisto.
       </p>
 

@@ -71,6 +71,11 @@ export default function ValuationForm() {
   const [loadingFuels, setLoadingFuels] = useState(false);
   const [fuelsLoaded, setFuelsLoaded] = useState(false);
 
+  // Dynamic years state
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [loadingYears, setLoadingYears] = useState(false);
+  const [yearsLoaded, setYearsLoaded] = useState(false);
+
   // Convert CAR_MAKES to select options format
   const makeOptions = useMemo(() => toSelectOptions(CAR_MAKES), []);
 
@@ -106,6 +111,45 @@ export default function ValuationForm() {
 
     fetchModels();
   }, [makeId]);
+
+  // Fetch available years when model changes
+  useEffect(() => {
+    if (!makeId || !modelId) {
+      setAvailableYears([]);
+      setYearsLoaded(false);
+      // Reset year selection when model changes
+      setYear('');
+      return;
+    }
+
+    const fetchYears = async () => {
+      setLoadingYears(true);
+      setYear(''); // Reset year when loading new options
+
+      try {
+        const response = await fetch(`/api/years/${makeId}/${modelId}`);
+        const data = await response.json();
+
+        if (data.years && data.years.length > 0) {
+          setAvailableYears(data.years);
+          setYearsLoaded(true);
+        } else {
+          // Fallback to default years if no specific ones found
+          setAvailableYears(YEARS_LIST);
+          setYearsLoaded(true);
+        }
+      } catch (err) {
+        console.error('Error fetching years:', err);
+        // Fallback to default years on error
+        setAvailableYears(YEARS_LIST);
+        setYearsLoaded(true);
+      } finally {
+        setLoadingYears(false);
+      }
+    };
+
+    fetchYears();
+  }, [makeId, modelId]);
 
   // Fetch available fuels when model changes
   useEffect(() => {
@@ -145,6 +189,14 @@ export default function ValuationForm() {
 
     fetchFuels();
   }, [makeId, modelId]);
+
+  // Compute year options: use available years if loaded, otherwise default
+  const yearOptions = useMemo(() => {
+    if (yearsLoaded && availableYears.length > 0) {
+      return availableYears.map((y) => ({ value: String(y), label: String(y) }));
+    }
+    return YEAR_OPTIONS;
+  }, [yearsLoaded, availableYears]);
 
   // Compute fuel options: use available fuels if loaded, otherwise default
   const fuelOptions = useMemo(() => {
@@ -294,13 +346,24 @@ export default function ValuationForm() {
       {/* Year and Km */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
         <div className="space-y-2">
-          <label htmlFor="year">Anno immatricolazione</label>
+          <label htmlFor="year">
+            Anno immatricolazione
+            {yearsLoaded && availableYears.length > 0 && availableYears.length < YEARS_LIST.length && (
+              <span className="ml-2 text-xs text-[var(--text-muted)]">
+                ({availableYears[availableYears.length - 1]}-{availableYears[0]})
+              </span>
+            )}
+          </label>
           <SearchableSelect
             id="year"
-            options={YEAR_OPTIONS}
+            options={yearOptions}
             value={year}
             onChange={setYear}
             placeholder="Cerca anno..."
+            disabled={!modelId}
+            loading={loadingYears}
+            loadingText="Caricamento..."
+            disabledText="Prima seleziona modello"
           />
         </div>
 
