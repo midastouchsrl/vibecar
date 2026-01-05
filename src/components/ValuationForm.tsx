@@ -66,10 +66,6 @@ export default function ValuationForm() {
   const [models, setModels] = useState<Model[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
 
-  // Dynamic fuels state
-  const [availableFuels, setAvailableFuels] = useState<Array<{ value: string; label: string }>>([]);
-  const [loadingFuels, setLoadingFuels] = useState(false);
-  const [fuelsLoaded, setFuelsLoaded] = useState(false);
 
   // Dynamic years state
   const [availableYears, setAvailableYears] = useState<number[]>([]);
@@ -151,43 +147,14 @@ export default function ValuationForm() {
     fetchYears();
   }, [makeId, modelId]);
 
-  // Fetch available fuels when model changes
+  // Reset fuel when model changes - always show all fuel options
   useEffect(() => {
     if (!makeId || !modelId) {
-      setAvailableFuels([]);
-      setFuelsLoaded(false);
-      // Reset fuel selection when model changes
       setFuel('');
       return;
     }
-
-    const fetchFuels = async () => {
-      setLoadingFuels(true);
-      setFuel(''); // Reset fuel when loading new options
-
-      try {
-        const response = await fetch(`/api/fuels/${makeId}/${modelId}`);
-        const data = await response.json();
-
-        if (data.fuels && data.fuels.length > 0) {
-          setAvailableFuels(data.fuels);
-          setFuelsLoaded(true);
-        } else {
-          // Fallback to default fuels if no specific ones found
-          setAvailableFuels(FUEL_OPTIONS);
-          setFuelsLoaded(true);
-        }
-      } catch (err) {
-        console.error('Error fetching fuels:', err);
-        // Fallback to default fuels on error
-        setAvailableFuels(FUEL_OPTIONS);
-        setFuelsLoaded(true);
-      } finally {
-        setLoadingFuels(false);
-      }
-    };
-
-    fetchFuels();
+    // Reset fuel selection when model changes
+    setFuel('');
   }, [makeId, modelId]);
 
   // Compute year options: use available years if loaded, otherwise default
@@ -198,13 +165,8 @@ export default function ValuationForm() {
     return YEAR_OPTIONS;
   }, [yearsLoaded, availableYears]);
 
-  // Compute fuel options: use available fuels if loaded, otherwise default
-  const fuelOptions = useMemo(() => {
-    if (fuelsLoaded && availableFuels.length > 0) {
-      return availableFuels;
-    }
-    return FUEL_OPTIONS;
-  }, [fuelsLoaded, availableFuels]);
+  // Always show all fuel options - let the valuation handle unavailable combinations
+  const fuelOptions = FUEL_OPTIONS;
 
   // Get selected make and model names for submission
   const getSelectedMakeName = () => {
@@ -383,24 +345,13 @@ export default function ValuationForm() {
       {/* Fuel and Gearbox */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
         <div className="space-y-2">
-          <label htmlFor="fuel">
-            Alimentazione
-            {fuelsLoaded && availableFuels.length > 0 && availableFuels.length < FUEL_OPTIONS.length && (
-              <span className="ml-2 text-xs text-[var(--text-muted)]">
-                ({availableFuels.length} disponibil{availableFuels.length === 1 ? 'e' : 'i'})
-              </span>
-            )}
-          </label>
+          <label htmlFor="fuel">Alimentazione</label>
           <SearchableSelect
             id="fuel"
             options={fuelOptions}
             value={fuel}
             onChange={setFuel}
             placeholder="Cerca alimentazione..."
-            disabled={!modelId}
-            loading={loadingFuels}
-            loadingText="Caricamento..."
-            disabledText="Prima seleziona modello"
           />
         </div>
 
