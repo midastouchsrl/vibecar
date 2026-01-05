@@ -172,7 +172,10 @@ export default function ValuationResultDisplay({ result, input }: Props) {
   const rangeMinPos = ((rangeMin - observedMin) / totalRange) * 100;
   const rangeMaxPos = ((rangeMax - observedMin) / totalRange) * 100;
   const centralPos = ((centralValue - observedMin) / totalRange) * 100;
-  const professionalPos = ((professionalChannel - observedMin) / totalRange) * 100;
+
+  // For channel comparison, use percentage relative to central value (100%)
+  const professionalPct = (professionalChannel / centralValue) * 100;
+  const marketDirectPct = 100; // centralValue is the reference (100%)
 
   return (
     <div className="space-y-6">
@@ -413,15 +416,8 @@ export default function ValuationResultDisplay({ result, input }: Props) {
             </div>
             <div className="h-3 bg-[var(--obsidian-700)] rounded-full relative overflow-hidden">
               <div
-                className="absolute h-full bg-emerald-500/30 rounded-full"
-                style={{
-                  left: `${rangeMinPos}%`,
-                  width: `${rangeMaxPos - rangeMinPos}%`,
-                }}
-              />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-emerald-400 rounded-full"
-                style={{ left: `${centralPos}%`, transform: 'translateX(-50%) translateY(-50%)' }}
+                className="h-full bg-gradient-to-r from-emerald-500/40 to-emerald-400/60 rounded-full"
+                style={{ width: `${marketDirectPct}%` }}
               />
             </div>
           </div>
@@ -433,17 +429,9 @@ export default function ValuationResultDisplay({ result, input }: Props) {
               <span className="text-xs font-medium text-blue-400">{formatPrice(professionalChannel)}</span>
             </div>
             <div className="h-3 bg-[var(--obsidian-700)] rounded-full relative overflow-hidden">
-              {/* Filled bar up to professional channel position */}
               <div
-                className="absolute h-full bg-blue-500/30 rounded-full"
-                style={{
-                  left: '0%',
-                  width: `${professionalPos}%`,
-                }}
-              />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-blue-400 rounded-full"
-                style={{ left: `${professionalPos}%`, transform: 'translateX(-50%) translateY(-50%)' }}
+                className="h-full bg-gradient-to-r from-blue-500/40 to-blue-400/60 rounded-full"
+                style={{ width: `${professionalPct}%` }}
               />
             </div>
           </div>
