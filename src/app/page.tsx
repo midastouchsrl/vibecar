@@ -37,16 +37,14 @@ export default function Home() {
 
           {/* Headline */}
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 opacity-0 animate-fade-in-up animate-delay-100">
-              Il prezzo{' '}
-              <span className="text-gradient-brand">reale</span>{' '}
-              della tua auto.
-              <br />
-              <span className="text-[var(--text-secondary)] text-3xl md:text-5xl lg:text-6xl font-medium">Non quello che ti offrono.</span>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 opacity-0 animate-fade-in-up animate-delay-100">
+              Quanto vale{' '}
+              <span className="text-gradient-brand">davvero</span>{' '}
+              la tua auto?
             </h1>
 
             <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-4 opacity-0 animate-fade-in-up animate-delay-200">
-              Analisi di mercato su veicoli simili al tuo, con un intervallo di prezzo chiaro e una precisione stimata.
+              Stima basata su veicoli simili al tuo, con un intervallo di prezzo chiaro.
             </p>
 
             {/* Trust indicators */}
