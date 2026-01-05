@@ -509,10 +509,10 @@ export default function ValuationResultDisplay({ result, input }: Props) {
           ============================================ */}
       <div className="space-y-3 opacity-0 animate-fade-in-up animate-delay-400">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Primary CTA */}
+          {/* Nuova valutazione - secondary */}
           <Link
             href="/"
-            className="btn-primary flex items-center justify-center gap-2 py-3.5"
+            className="btn-secondary flex items-center justify-center gap-2 py-3.5"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -520,7 +520,7 @@ export default function ValuationResultDisplay({ result, input }: Props) {
             Nuova valutazione
           </Link>
 
-          {/* Secondary CTA */}
+          {/* Condividi - secondary */}
           <button
             onClick={() => {
               handleShare('link');
@@ -539,6 +539,11 @@ export default function ValuationResultDisplay({ result, input }: Props) {
           Utile per confronti, trattative o consulenze.
         </p>
       </div>
+
+      {/* Disclaimer */}
+      <p className="text-xs text-gray-500 dark:text-slate-400 text-center opacity-0 animate-fade-in-up animate-delay-450">
+        Valutazione indicativa basata su dati di mercato pubblicamente disponibili. Non costituisce offerta di acquisto.
+      </p>
 
       {/* Share Modal */}
       <ShareModal
