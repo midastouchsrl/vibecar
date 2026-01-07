@@ -45,49 +45,55 @@ type ViewMode = 'buying' | 'selling';
  * COEFFICIENTS DOCUMENTATION (Last verified: January 2026)
  *
  * Sources:
- * - AutoScout24 empirical analysis (Fiat Panda 2018-2022, 50-80k km)
- * - Eurotax BLU/GIALLO price gap data
- * - UNRAE dealer margin reports
- * - comproautobrescia.com, Quattroruote forum industry data
+ * - AutoScout24: analisi empirica prezzi dealer vs privati
+ * - Eurotax BLU/GIALLO: gap ~10% tra ritiro e vendita dealer
+ * - comproautobrescia.com: dealer paga 20-25% sotto prezzi AutoScout24
+ * - Sicurauto, alVolante, Frattin Auto: guide permuta vs vendita privato
  *
  * Key findings:
- * - Dealer/Private gap: 12-17% verified empirically (Fiat Panda median €9.045 dealer vs €7.500 private = 17%)
- * - Dealer negotiation margin: 5-10% (€500-1000 on €10k vehicle)
- * - Private negotiation margin: 8-12% (more flexible)
- * - Dealer buyback: 20-25% below selling price (they need margin)
- * - Trade-in premium: +3% vs direct buyback (incentive to buy from them)
+ * - Dealer/Private BUYING gap: 20-30% (auto €10k dealer = €7-8k privato)
+ * - Dealer negotiation: 5-6% dal listino
+ * - Private negotiation: 8-10% dal listino
+ * - Ritiro diretto dealer: -25% dalla mediana (costi + margine)
+ * - Permuta: -22% dalla mediana (+3% vs ritiro, incentivo acquisto)
+ * - Vendita privato: -10% listino, -18% chiusura (dopo trattativa)
  *
- * Segment logic:
- * - Economy (<€15k): Higher % gap because absolute dealer margin (~€1-1.5k) weighs more
- * - Medium (€15k-30k): Standard margins
- * - Premium (>€30k): Lower % gap, buyers less price-sensitive, bigger absolute margins
+ * VINCOLO CRITICO per VENDITA:
+ * Annuncio privato > Chiusura privato > Permuta > Ritiro diretto
  */
 function calculateChannelPrices(medianPrice: number) {
   // Segment detection (economy vs premium affects margins)
   const isEconomy = medianPrice < 15000;
   const isPremium = medianPrice > 30000;
 
-  // Coefficients by segment (see documentation above for sources)
-  // Gap = difference between dealer listing and private listing prices
-  const dealerPrivateGap = isEconomy ? 0.15 : isPremium ? 0.10 : 0.12;
-  // Dealer negotiation = typical discount from listed price
-  const dealerNegotiation = isEconomy ? 0.05 : isPremium ? 0.08 : 0.06;
-  // Private negotiation = typical discount from listed price (more flexible)
+  // ============================================
+  // BUYING: quando l'utente COMPRA un'auto
+  // ============================================
+  // Gap dealer/privato: 20-25% (economy), 15-20% (premium)
+  const dealerPrivateGap = isEconomy ? 0.22 : isPremium ? 0.15 : 0.18;
+  const dealerNegotiation = isEconomy ? 0.05 : isPremium ? 0.07 : 0.06;
   const privateNegotiation = isEconomy ? 0.10 : isPremium ? 0.06 : 0.08;
 
-  // BUYING prices
   const buyDealerListing = medianPrice;
   const buyDealerFinal = Math.round(medianPrice * (1 - dealerNegotiation) / 50) * 50;
   const buyPrivateListing = Math.round(medianPrice * (1 - dealerPrivateGap) / 50) * 50;
   const buyPrivateFinal = Math.round(buyPrivateListing * (1 - privateNegotiation) / 50) * 50;
 
-  // SELLING prices
-  const sellPrivateListing = buyPrivateListing;
-  const sellPrivateFinal = buyPrivateFinal;
-  // Dealer buyback: 25% below selling price (they need room for reconditioning + margin)
-  const sellDealerOffer = Math.round(medianPrice * 0.75 / 50) * 50;
-  // Trade-in: slightly better (+3%) as incentive to buy from them
+  // ============================================
+  // SELLING: quando l'utente VENDE la sua auto
+  // ============================================
+  // IMPORTANTE: logica DIVERSA da buying!
+  // Quando VENDI a privato, TU sei il venditore privato, quindi puoi
+  // chiedere prezzi simili ad altri privati (vicino alla mediana)
+
+  // Annuncio privato: -10% dalla mediana (competitivo ma realistico)
+  const sellPrivateListing = Math.round(medianPrice * 0.90 / 50) * 50;
+  // Chiusura realistica: -18% dalla mediana (dopo trattativa)
+  const sellPrivateFinal = Math.round(medianPrice * 0.82 / 50) * 50;
+  // Permuta: -22% (dealer guadagna anche sulla nuova auto)
   const sellTradeIn = Math.round(medianPrice * 0.78 / 50) * 50;
+  // Ritiro diretto: -25% (dealer deve solo rivendere l'usata)
+  const sellDealerOffer = Math.round(medianPrice * 0.75 / 50) * 50;
 
   return {
     buying: {
