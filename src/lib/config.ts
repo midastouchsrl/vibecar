@@ -17,8 +17,12 @@ export const DEFAULT_VALUATION_CONFIG: ValuationConfig = {
   outlierLowPercentile: 10,
   outlierHighPercentile: 90,
 
-  // Sconto dealer: 14% sotto la mediana (quindi * 0.86)
+  // Sconto dealer ritiro diretto: 14% sotto la mediana (p50 * 0.86)
   dealerDiscountPercent: 0.14,
+
+  // Sconto permuta: 7% sotto la mediana (p50 * 0.93)
+  // Più alto del ritiro diretto perché il dealer guadagna sulla nuova auto
+  tradeInDiscountPercent: 0.07,
 
   // Aggiustamenti per condizione veicolo
   conditionAdjustments: {

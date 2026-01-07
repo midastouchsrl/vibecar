@@ -56,7 +56,12 @@ export interface ValuationResult {
   range_min: number;       // Prezzo minimo range (P25)
   range_max: number;       // Prezzo massimo range (P75)
   market_median: number;   // Mediana di mercato (P50)
-  dealer_buy_price: number; // Prezzo acquisto concessionario
+  dealer_buy_price: number; // Prezzo ritiro diretto dealer (più basso)
+
+  // Prezzi vendita dettagliati
+  private_listing_price: number;  // Dove mettere annuncio privato (P75)
+  private_closing_price: number;  // Chiusura realistica privato (P50)
+  trade_in_price: number;         // Permuta (sopra ritiro, sotto P50)
 
   // Percentili dettagliati
   p25: number;
@@ -124,7 +129,8 @@ export interface ValuationConfig {
   kmWindowPercent: number;      // ±% km da cercare (default: 0.30)
   outlierLowPercentile: number; // Percentile basso da escludere (default: 10)
   outlierHighPercentile: number;// Percentile alto da escludere (default: 90)
-  dealerDiscountPercent: number;// Sconto dealer (default: 0.14 = 14%)
+  dealerDiscountPercent: number;// Sconto dealer ritiro diretto (default: 0.14 = 14%)
+  tradeInDiscountPercent: number;// Sconto permuta (default: 0.07 = 7%)
   conditionAdjustments: {
     scarsa: number;  // -7%
     normale: number; // 0%
