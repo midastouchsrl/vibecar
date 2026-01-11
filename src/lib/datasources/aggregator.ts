@@ -18,6 +18,7 @@ import {
   QueuedRequest,
 } from './types';
 import { autoscout24Adapter } from './autoscout24';
+import { autoscout24PlaywrightAdapter } from './autoscout24-playwright';
 
 // Registry delle fonti disponibili
 const adapters: Map<string, DataSourceAdapter> = new Map();
@@ -148,16 +149,29 @@ export async function aggregateListings(
   const startTime = Date.now();
   const sources: { [key: string]: number } = {};
 
-  // STEP 1: Fonte primaria (AutoScout24 - veloce)
-  console.log('[Aggregator] Step 1: Fetch da AutoScout24...');
+  // STEP 1: Fonte primaria (AutoScout24 HTTP - veloce)
+  console.log('[Aggregator] Step 1: Fetch da AutoScout24 (HTTP)...');
 
   let primaryResults: CarListing[] = [];
   try {
     primaryResults = await autoscout24Adapter.fetchListings(input, params);
     sources['autoscout24'] = primaryResults.length;
   } catch (error) {
-    console.error('[Aggregator] Errore AutoScout24:', error);
+    console.error('[Aggregator] Errore AutoScout24 HTTP:', error);
     sources['autoscout24'] = 0;
+  }
+
+  // STEP 1.5: Fallback a Playwright se HTTP non trova risultati
+  if (primaryResults.length === 0) {
+    console.log('[Aggregator] Step 1.5: Fallback a Playwright...');
+    try {
+      primaryResults = await autoscout24PlaywrightAdapter.fetchListings(input, params);
+      sources['autoscout24-playwright'] = primaryResults.length;
+      console.log(`[Aggregator] Playwright: ${primaryResults.length} risultati`);
+    } catch (error) {
+      console.error('[Aggregator] Errore AutoScout24 Playwright:', error);
+      sources['autoscout24-playwright'] = 0;
+    }
   }
 
   // STEP 2: Valuta se servono fonti secondarie

@@ -15,6 +15,7 @@ const SEARCH_STRATEGIES = [
   { yearWindow: 2, kmWindowPercent: 0.15, label: 'anno allargato' },
   { yearWindow: 2, kmWindowPercent: 0.30, label: 'anno+km allargati' },
   { yearWindow: 2, kmWindowPercent: 0.30, removeGear: true, label: 'senza cambio' },
+  { yearWindow: 2, kmWindowPercent: 0.30, removeVariant: true, label: 'senza versione' },
 ];
 
 /**
@@ -89,16 +90,26 @@ export async function getOrComputeEstimate(
 
   // Prova ogni strategia di ricerca
   for (const strategy of SEARCH_STRATEGIES) {
+    // Salta la strategia "senza versione" se non c'è una versione selezionata
+    if (strategy.removeVariant && !input.variant) {
+      continue;
+    }
+
     const yearMin = input.year - strategy.yearWindow;
     const yearMax = input.year + strategy.yearWindow;
     const kmDelta = Math.round(input.km * strategy.kmWindowPercent);
     const kmMin = Math.max(0, input.km - kmDelta);
     const kmMax = input.km + kmDelta;
 
-    // Genera hash per questa query
-    const queryHash = buildQueryHash(input, yearMin, yearMax, kmMin, kmMax);
+    // Crea input modificato per questa strategia (rimuovi variant se richiesto)
+    const strategyInput = strategy.removeVariant
+      ? { ...input, variant: undefined }
+      : input;
 
-    console.log(`[Estimate] Strategia "${strategy.label}": anni ${yearMin}-${yearMax}, km ${kmMin}-${kmMax}`);
+    // Genera hash per questa query
+    const queryHash = buildQueryHash(strategyInput, yearMin, yearMax, kmMin, kmMax);
+
+    console.log(`[Estimate] Strategia "${strategy.label}": anni ${yearMin}-${yearMax}, km ${kmMin}-${kmMax}${strategy.removeVariant ? ' (versione rimossa)' : ''}`);
 
     // STEP 1: Check cache DB
     try {
@@ -112,11 +123,17 @@ export async function getOrComputeEstimate(
         const p75 = applyConditionAdjustment(cached.p75, input.condition);
         const dealerPrice = roundToMultiple(p50 * (1 - config.dealerDiscountPercent), 50);
 
+        // Calcola prezzi vendita dettagliati
+        const tradeInPrice = roundToMultiple((dealerPrice + p50) / 2, 50); // Tra dealer e P50
+
         return {
           range_min: p25,
           range_max: p75,
           market_median: p50,
           dealer_buy_price: dealerPrice,
+          private_listing_price: p75,    // Dove mettere annuncio
+          private_closing_price: p50,    // Chiusura realistica
+          trade_in_price: tradeInPrice,  // Permuta
           p25,
           p50,
           p75,
@@ -128,7 +145,7 @@ export async function getOrComputeEstimate(
           confidence: cached.iqr_ratio < 0.25 && cached.n_listings >= 30 ? 'alta' :
                      cached.iqr_ratio < 0.40 && cached.n_listings >= 10 ? 'media' : 'bassa',
           explanation: generateExplanation(
-            input,
+            strategyInput,
             { nClean: cached.n_listings, nDealers: cached.n_dealers, nPrivate: cached.n_private, iqrRatio: cached.iqr_ratio },
             [yearMin, yearMax],
             [kmMin, kmMax],
@@ -140,7 +157,7 @@ export async function getOrComputeEstimate(
           computed_from: {
             year_window: [yearMin, yearMax],
             km_window: [kmMin, kmMax],
-            filters_applied: [input.fuel, input.gearbox, input.variant, input.bodyType].filter(Boolean) as string[],
+            filters_applied: [strategyInput.fuel, strategyInput.gearbox, strategyInput.variant, strategyInput.bodyType].filter(Boolean) as string[],
           },
         };
       }
@@ -151,7 +168,7 @@ export async function getOrComputeEstimate(
 
     // STEP 2: Fetch data via aggregator (cache-first, AutoScout24 primario)
     console.log(`[Estimate] Fetching via aggregator...`);
-    const aggregated = await aggregateListings(input, {
+    const aggregated = await aggregateListings(strategyInput, {
       yearMin,
       yearMax,
       kmMin,
@@ -187,16 +204,16 @@ export async function getOrComputeEstimate(
       const cacheInput: QueryStatsInput = {
         queryHash,
         filters: {
-          brand: input.brand,
-          model: input.model,
+          brand: strategyInput.brand,
+          model: strategyInput.model,
           yearMin,
           yearMax,
           kmMin,
           kmMax,
-          fuel: input.fuel,
-          gearbox: input.gearbox,
-          variant: input.variant,
-          bodyType: input.bodyType,
+          fuel: strategyInput.fuel,
+          gearbox: strategyInput.gearbox,
+          variant: strategyInput.variant,
+          bodyType: strategyInput.bodyType,
         },
         source: 'autoscout24',
         nListings: stats.nClean,
@@ -223,12 +240,16 @@ export async function getOrComputeEstimate(
     const p50 = applyConditionAdjustment(stats.p50, input.condition);
     const p75 = applyConditionAdjustment(stats.p75, input.condition);
     const dealerPrice = roundToMultiple(p50 * (1 - config.dealerDiscountPercent), 50);
+    const tradeInPrice = roundToMultiple((dealerPrice + p50) / 2, 50);
 
     return {
       range_min: p25,
       range_max: p75,
       market_median: p50,
       dealer_buy_price: dealerPrice,
+      private_listing_price: p75,
+      private_closing_price: p50,
+      trade_in_price: tradeInPrice,
       p25,
       p50,
       p75,
@@ -239,7 +260,7 @@ export async function getOrComputeEstimate(
       iqr_ratio: stats.iqrRatio,
       confidence: stats.confidence,
       explanation: generateExplanation(
-        input,
+        strategyInput,
         stats,
         [yearMin, yearMax],
         [kmMin, kmMax],
@@ -251,14 +272,15 @@ export async function getOrComputeEstimate(
       computed_from: {
         year_window: [yearMin, yearMax],
         km_window: [kmMin, kmMax],
-        filters_applied: [input.fuel, input.gearbox, input.variant, input.bodyType].filter(Boolean) as string[],
+        filters_applied: [strategyInput.fuel, strategyInput.gearbox, strategyInput.variant, strategyInput.bodyType].filter(Boolean) as string[],
       },
     };
   }
 
   // STEP 6: Nessun risultato con nessuna strategia
-  // Verifica se il modello esiste
-  const anyResult = await aggregateListings(input, {
+  // Verifica se il modello esiste (senza variant per test più ampio)
+  const baseInput = { ...input, variant: undefined };
+  const anyResult = await aggregateListings(baseInput, {
     yearMin: 1990,
     yearMax: new Date().getFullYear() + 1,
     kmMin: 0,
@@ -272,6 +294,15 @@ export async function getOrComputeEstimate(
       error: true,
       message: `Nessun ${input.brand} ${input.model} trovato in Italia.`,
       suggestion: 'Questo modello potrebbe non essere disponibile sul mercato italiano.',
+    } as ValuationError;
+  }
+
+  // Se c'era una variante specifica, il problema è probabilmente quella
+  if (input.variant) {
+    return {
+      error: true,
+      message: `La versione "${input.variant}" non ha abbastanza annunci.`,
+      suggestion: `Abbiamo trovato ${anyListings.length} ${input.brand} ${input.model} ma senza questa versione specifica. Prova a non selezionare la versione per una stima più ampia.`,
     } as ValuationError;
   }
 

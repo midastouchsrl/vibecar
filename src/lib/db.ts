@@ -88,9 +88,44 @@ export async function getCachedStats(
 }
 
 /**
+ * Valida i dati prima del caching per evitare prezzi corrotti
+ * Rifiuta dati palesemente errati (es. rate mensili invece di prezzi pieni)
+ */
+function validatePriceData(input: QueryStatsInput): { valid: boolean; reason?: string } {
+  // Rifiuta se p25 < 500€ (quasi nessuna auto vale meno)
+  if (input.p25 < 500) {
+    return { valid: false, reason: `p25 troppo basso: ${input.p25}€` };
+  }
+
+  // Rifiuta se p50 < 1500€ con pochi annunci (probabile errore)
+  if (input.p50 < 1500 && input.nListings < 15) {
+    return { valid: false, reason: `p50 sospetto: ${input.p50}€ con solo ${input.nListings} annunci` };
+  }
+
+  // Rifiuta se IQR ratio > 4.0 (dati troppo dispersi per essere affidabili)
+  if (input.iqrRatio > 4.0) {
+    return { valid: false, reason: `IQR ratio troppo alto: ${input.iqrRatio}` };
+  }
+
+  // Rifiuta se range min-max è troppo ampio (> 20x)
+  if (input.maxClean > input.minClean * 20) {
+    return { valid: false, reason: `Range troppo ampio: ${input.minClean}€ - ${input.maxClean}€` };
+  }
+
+  return { valid: true };
+}
+
+/**
  * Salva/aggiorna record in cache
  */
 export async function upsertStats(input: QueryStatsInput): Promise<void> {
+  // Valida dati prima del caching
+  const validation = validatePriceData(input);
+  if (!validation.valid) {
+    console.warn(`[DB] Cache rifiutata: ${validation.reason}`, input.filters);
+    return;
+  }
+
   const db = getDb();
   const ttlHours = input.ttlHours ?? 24;
 
