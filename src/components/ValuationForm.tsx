@@ -25,6 +25,7 @@ import {
   getAnonId,
 } from '@/lib/analytics';
 import SearchableSelect, { toSelectOptions } from './SearchableSelect';
+import LoadingScreen from './LoadingScreen';
 
 // Convert power ranges to select options format
 const POWER_OPTIONS = POWER_RANGES.map((p) => ({ value: p.value, label: p.label }));
@@ -57,9 +58,18 @@ interface Variant {
   slug?: string;
 }
 
+interface LoadingCarInfo {
+  brand: string;
+  model: string;
+  year: string;
+  km: string;
+  fuel?: string;
+}
+
 export default function ValuationForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [loadingCarInfo, setLoadingCarInfo] = useState<LoadingCarInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Form state
@@ -263,16 +273,24 @@ export default function ValuationForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
     const brandName = getSelectedMakeName();
     const modelName = getSelectedModelName();
 
     if (!brandName || !modelName) {
       setError('Seleziona marca e modello');
-      setLoading(false);
       return;
     }
+
+    // Set loading state with car info for premium loading screen
+    setLoadingCarInfo({
+      brand: brandName,
+      model: modelName,
+      year: String(year),
+      km: km.replace(/\D/g, ''),
+      fuel: fuel ? String(fuel) : undefined,
+    });
+    setLoading(true);
 
     // Track estimate start and begin timing
     const estimateProps = {
@@ -322,6 +340,7 @@ export default function ValuationForm() {
         trackEstimateFailed(estimateProps, data.message);
         setError(data.message + (data.suggestion ? ` ${data.suggestion}` : ''));
         setLoading(false);
+        setLoadingCarInfo(null);
         return;
       }
 
@@ -350,6 +369,7 @@ export default function ValuationForm() {
       console.error(err);
       setError('Errore di connessione. Riprova.');
       setLoading(false);
+      setLoadingCarInfo(null);
     }
   };
 
@@ -358,6 +378,11 @@ export default function ValuationForm() {
     const num = value.replace(/\D/g, '');
     return num.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
+
+  // Show loading screen when loading
+  if (loading && loadingCarInfo) {
+    return <LoadingScreen carInfo={loadingCarInfo} />;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
