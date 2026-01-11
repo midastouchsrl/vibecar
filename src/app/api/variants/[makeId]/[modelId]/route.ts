@@ -30,7 +30,9 @@ const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 ore
  */
 async function fetchVariantsFromTaxonomy(
   makeId: number,
-  modelId: number
+  modelId: number,
+  brandSlugHint?: string,
+  modelSlugHint?: string
 ): Promise<ModelLineResponse[]> {
   const cacheKey = `variants-${makeId}-${modelId}`;
   const cached = variantsCache.get(cacheKey);
@@ -92,32 +94,117 @@ async function fetchVariantsFromTaxonomy(
   }
 
   // Fallback: scraping della pagina filtri
-  return await fetchVariantsFromScraping(makeId, modelId);
+  return await fetchVariantsFromScraping(makeId, modelId, brandSlugHint, modelSlugHint);
 }
 
 /**
  * Fallback: estrae varianti dalla pagina di ricerca AutoScout24
+ * Cerca nella sezione "Versione" del footer della pagina risultati
+ *
+ * Se brandSlugHint e modelSlugHint sono forniti, li usa direttamente.
+ * Altrimenti: Step 1: Fetch con mmm parameter per ottenere brand/model slug dalla redirect/breadcrumb
+ * Step 2: Fetch con brand/model path per ottenere la sezione "Versione"
  */
 async function fetchVariantsFromScraping(
   makeId: number,
-  modelId: number
+  modelId: number,
+  brandSlugHint?: string,
+  modelSlugHint?: string
 ): Promise<ModelLineResponse[]> {
+  console.log(`[Variants API] Starting scraping for make=${makeId}, model=${modelId} (v3) with hints: ${brandSlugHint}/${modelSlugHint}`);
   try {
-    const searchUrl = `https://www.autoscout24.it/lst?mmm=${makeId}|${modelId}|&cy=I`;
+    let brandSlug: string | null = brandSlugHint || null;
+    let modelSlug: string | null = modelSlugHint || null;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    // Se abbiamo già i slug hints, saltiamo la discovery
+    if (!brandSlug || !modelSlug) {
+      // Step 1: Fetch iniziale per scoprire brand/model slug
+      const initialUrl = `https://www.autoscout24.it/lst?mmm=${makeId}|${modelId}|&cy=I`;
+
+      const controller1 = new AbortController();
+      const timeoutId1 = setTimeout(() => controller1.abort(), 10000);
+
+      const response1 = await fetch(initialUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'it-IT,it;q=0.9',
+        },
+        signal: controller1.signal,
+        redirect: 'follow',
+      });
+
+      clearTimeout(timeoutId1);
+
+      if (!response1.ok) {
+        console.log(`[Variants API] Initial fetch returned ${response1.status}`);
+        return [];
+      }
+
+      // Estrai brand/model dal URL finale (dopo redirect) o dall'HTML
+      const finalUrl = response1.url;
+      const brandModelMatch = finalUrl.match(/\/lst\/([^/?]+)\/([^/?]+)/);
+
+      if (brandModelMatch) {
+        // URL ha già brand/model (es. redirect a /lst/fiat/panda)
+        brandSlug = brandModelMatch[1];
+        modelSlug = brandModelMatch[2];
+      } else {
+        // URL è ancora con mmm parameter, estrai da HTML
+        const html1 = await response1.text();
+
+        // Cerca brand nel breadcrumb: "@id":"/lst/volkswagen","name":"Volkswagen"
+        const brandMatch = html1.match(/"@id":"\/lst\/([a-z0-9-]+)","name":"[^"]+"/);
+        if (brandMatch) {
+          brandSlug = brandMatch[1];
+
+          // Cerca model slug nei link della pagina: /lst/brand/model
+          // Prende il primo link che ha brand + model
+          const modelLinkMatch = html1.match(new RegExp(`/lst/${brandSlug}/([a-z0-9-]+)(?:\\?|")`));
+          if (modelLinkMatch) {
+            modelSlug = modelLinkMatch[1];
+          } else {
+            // Fallback: cerca in title o h1 per estrarre nome modello
+            const titleMatch = html1.match(/<title>([^<]+)<\/title>/);
+            if (titleMatch) {
+              // Titolo tipo "Volkswagen Golf usata..." -> estrai "golf"
+              const titleParts = titleMatch[1].toLowerCase().split(/\s+/);
+              // Cerca la parola dopo il brand
+              const brandIdx = titleParts.findIndex(p => p === brandSlug || p.includes(brandSlug!));
+              if (brandIdx >= 0 && titleParts[brandIdx + 1]) {
+                modelSlug = titleParts[brandIdx + 1].replace(/[^a-z0-9-]/g, '');
+              }
+            }
+          }
+        }
+      }
+
+      if (!brandSlug || !modelSlug) {
+        console.log(`[Variants API] Could not determine brand/model slug from URL: ${finalUrl}`);
+        return [];
+      }
+
+      console.log(`[Variants API] Resolved slugs from discovery: ${brandSlug}/${modelSlug}`);
+    } else {
+      console.log(`[Variants API] Using provided slugs: ${brandSlug}/${modelSlug}`);
+    }
+
+    // Step 2: Fetch pagina con path brand/model per ottenere versioni
+    const searchUrl = `https://www.autoscout24.it/lst/${brandSlug}/${modelSlug}?cy=I`;
+
+    const controller2 = new AbortController();
+    const timeoutId2 = setTimeout(() => controller2.abort(), 15000);
 
     const response = await fetch(searchUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'it-IT,it;q=0.9',
       },
-      signal: controller.signal,
+      signal: controller2.signal,
     });
 
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId2);
 
     if (!response.ok) {
       console.log(`[Variants API] Scraping fallback returned ${response.status}`);
@@ -125,41 +212,50 @@ async function fetchVariantsFromScraping(
     }
 
     const html = await response.text();
-
-    // Cerca il pattern per le versioni nel filtro
-    // Pattern: data-testid="filter-version" con checkbox items
     const variants: ModelLineResponse[] = [];
 
-    // Regex per estrarre varianti dal filtro versione
-    // Pattern tipico: ve_<slug> con label associata
-    const versionPattern = /ve_([a-z0-9-]+)[^>]*>([^<]+)</gi;
+    // Pattern 1: Link nella sezione "Versione" del footer
+    // Gestisce sia URL assoluti (https://...) che relativi (/lst/...)
+    // Formato: href="[...]/lst/brand/model/ve_slug">Nome Completo</a>
+    // IMPORTANTE: [a-z0-9.-]+ include il punto per "1.2", "2.0" ecc.
+    const versionLinkPattern = /href="(?:https?:\/\/[^"]+)?\/lst\/[^"]+\/ve_([a-z0-9.-]+)"[^>]*>([^<]+)<\/a>/gi;
     let match;
 
-    while ((match = versionPattern.exec(html)) !== null) {
+    while ((match = versionLinkPattern.exec(html)) !== null) {
       const slug = match[1];
-      const name = match[2].trim();
+      let name = match[2].trim();
+
+      // Rimuovi prefisso brand/model ridondante (es. "Fiat Panda 4x4" -> "4x4")
+      // Cerca pattern tipo "Brand Model Versione"
+      const cleanNameMatch = name.match(/^[A-Z][a-z]+\s+[A-Z]?[a-z]+\s+(.+)$/);
+      if (cleanNameMatch) {
+        name = cleanNameMatch[1];
+      }
 
       if (name && slug && !variants.find(v => v.slug === slug)) {
         variants.push({
-          id: 0, // Non abbiamo l'ID numerico dallo scraping
+          id: 0,
           name,
           slug,
         });
       }
     }
 
-    // Pattern alternativo: cerca nei link filtro
-    const linkPattern = /\/lst\/[^/]+\/[^/]+\/ve_([a-z0-9-]+)/gi;
-    while ((match = linkPattern.exec(html)) !== null) {
-      const slug = match[1];
-      if (!variants.find(v => v.slug === slug)) {
-        // Converti slug in nome leggibile
-        const name = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        variants.push({
-          id: 0,
-          name,
-          slug,
-        });
+    // Pattern 2: Fallback - cerca pattern ve_ nell'URL con nome generato da slug
+    // Gestisce sia URL assoluti che relativi
+    if (variants.length === 0) {
+      const linkPattern = /(?:https?:\/\/[^/]+)?\/lst\/[^/]+\/[^/]+\/ve_([a-z0-9.-]+)/gi;
+      while ((match = linkPattern.exec(html)) !== null) {
+        const slug = match[1];
+        if (!variants.find(v => v.slug === slug)) {
+          // Converti slug in nome leggibile (es. "4x4-cross" -> "4x4 Cross")
+          const name = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          variants.push({
+            id: 0,
+            name,
+            slug,
+          });
+        }
       }
     }
 
@@ -180,6 +276,11 @@ async function fetchVariantsFromScraping(
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { makeId, modelId } = await params;
 
+  // Leggi query params per brand/model slugs (forniti dal frontend)
+  const { searchParams } = new URL(request.url);
+  const brandSlugHint = searchParams.get('brand') || undefined;
+  const modelSlugHint = searchParams.get('model') || undefined;
+
   // Valida parametri
   const makeIdNum = parseInt(makeId, 10);
   const modelIdNum = parseInt(modelId, 10);
@@ -192,7 +293,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const variants = await fetchVariantsFromTaxonomy(makeIdNum, modelIdNum);
+    const variants = await fetchVariantsFromTaxonomy(makeIdNum, modelIdNum, brandSlugHint, modelSlugHint);
 
     return NextResponse.json({
       makeId: makeIdNum,

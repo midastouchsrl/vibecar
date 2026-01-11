@@ -12,7 +12,6 @@ import {
   FUEL_TYPES,
   GEARBOX_TYPES,
   CONDITION_TYPES,
-  POWER_RANGES,
   ITALIAN_REGIONS,
   BODY_TYPES,
   KM_RANGES,
@@ -27,9 +26,6 @@ import {
 } from '@/lib/analytics';
 import SearchableSelect, { toSelectOptions } from './SearchableSelect';
 import LoadingScreen from './LoadingScreen';
-
-// Convert power ranges to select options format
-const POWER_OPTIONS = POWER_RANGES.map((p) => ({ value: p.value, label: p.label }));
 
 // Pre-compute years at module level to avoid hydration mismatch
 const BASE_YEAR = 2026;
@@ -85,7 +81,6 @@ export default function ValuationForm() {
   const [fuel, setFuel] = useState<string | ''>('');
   const [gearbox, setGearbox] = useState<string | ''>('');
   const [condition, setCondition] = useState('normale');
-  const [powerRange, setPowerRange] = useState<string>('');
   const [region, setRegion] = useState<string>('');
   const [variant, setVariant] = useState<string>('');
   const [bodyType, setBodyType] = useState<string>('');
@@ -200,8 +195,18 @@ export default function ValuationForm() {
       setLoadingVariants(true);
       setVariant(''); // Reset variant when loading new model
 
+      // Get brand/model names for API (helps with URL construction)
+      const make = CAR_MAKES.find((m) => m.id === makeId);
+      const model = models.find((m) => m.id === modelId);
+      const brandSlug = make?.name?.toLowerCase().replace(/\s+/g, '-') || '';
+      const modelSlug = model?.name?.toLowerCase().replace(/\s+/g, '-') || '';
+
       try {
-        const response = await fetch(`/api/variants/${makeId}/${modelId}`);
+        const params = new URLSearchParams();
+        if (brandSlug) params.set('brand', brandSlug);
+        if (modelSlug) params.set('model', modelSlug);
+        const queryString = params.toString() ? `?${params.toString()}` : '';
+        const response = await fetch(`/api/variants/${makeId}/${modelId}${queryString}`);
         const data = await response.json();
 
         if (data.variants && data.variants.length > 0) {
@@ -337,7 +342,6 @@ export default function ValuationForm() {
           fuel,
           gearbox,
           condition,
-          powerRange: powerRange || undefined,
           region: region || undefined,
           variant: variant || undefined,
           bodyType: bodyType || undefined,
@@ -373,7 +377,6 @@ export default function ValuationForm() {
           fuel,
           gearbox,
           condition,
-          powerRange: powerRange || undefined,
           region: region || undefined,
           variant: variant || undefined,
           bodyType: bodyType || undefined,
@@ -547,40 +550,9 @@ export default function ValuationForm() {
         </div>
       </div>
 
-      {/* Power Range and Region */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-        <div className="space-y-2">
-          <label htmlFor="power">
-            Potenza (CV)
-            <span className="ml-2 text-xs text-[var(--text-muted)]">opzionale</span>
-          </label>
-          <SearchableSelect
-            id="power"
-            options={POWER_OPTIONS}
-            value={powerRange}
-            onChange={setPowerRange}
-            placeholder="Non so / Qualsiasi"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="region">
-            Regione
-            <span className="ml-2 text-xs text-[var(--text-muted)]">opzionale</span>
-          </label>
-          <SearchableSelect
-            id="region"
-            options={REGION_OPTIONS}
-            value={region}
-            onChange={setRegion}
-            placeholder="Seleziona regione..."
-          />
-        </div>
-      </div>
-
-      {/* Variant and Body Type */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-        {/* Variant - only show if variants are available */}
+      {/* Variant, Body Type and Region */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+        {/* Variant */}
         <div className="space-y-2">
           <label htmlFor="variant">
             Versione
@@ -611,6 +583,21 @@ export default function ValuationForm() {
             value={bodyType}
             onChange={setBodyType}
             placeholder="Qualsiasi"
+          />
+        </div>
+
+        {/* Region */}
+        <div className="space-y-2">
+          <label htmlFor="region">
+            Regione
+            <span className="ml-2 text-xs text-[var(--text-muted)]">opzionale</span>
+          </label>
+          <SearchableSelect
+            id="region"
+            options={REGION_OPTIONS}
+            value={region}
+            onChange={setRegion}
+            placeholder="Seleziona regione..."
           />
         </div>
       </div>
